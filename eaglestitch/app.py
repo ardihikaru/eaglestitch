@@ -8,6 +8,7 @@ import logging
 
 from .stitching_api import StitchingAPIModule
 from .image_subscriber import ImageSubscriberModule
+from .stitching import StitchingModule
 
 ###
 
@@ -32,6 +33,7 @@ class EagleStitchApplication(asab.Application):
 
 		# Modules
 		self.add_module(StitchingAPIModule)
+		self.add_module(StitchingModule)  # this should be loaded BEFORE `Image Subscriber Module`
 		self.add_module(ImageSubscriberModule)
 
 	async def initialize(self):
