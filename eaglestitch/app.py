@@ -7,6 +7,7 @@ import asab.storage
 import logging
 
 from .stitching_api import StitchingAPIModule
+from .image_subscriber import ImageSubscriberModule
 
 ###
 
@@ -31,6 +32,7 @@ class EagleStitchApplication(asab.Application):
 
 		# Modules
 		self.add_module(StitchingAPIModule)
+		self.add_module(ImageSubscriberModule)
 
 	async def initialize(self):
 		L.warning("EagleStitch System is running!")
