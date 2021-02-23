@@ -42,8 +42,11 @@ class StitchingAPIService(asab.Service):
 
 		if stitched_id is not None:  # find by id
 			_data = await self.storage_svc.get_from_db_by_id(self.COLLECTION_NAME, stitched_id, self.keys)
-			L.error("Data not found.")
-			_msg = "Data not found."
+			if _data is None:
+				L.error("Data not found.")
+				_msg = "Data not found."
+			else:
+				_msg = "Data found."
 		else:
 			_data = await self.storage_svc.get_from_db(self.COLLECTION_NAME, self.keys)
 

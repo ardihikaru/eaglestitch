@@ -13,6 +13,15 @@ class Stitch(object):
 
 	def run(self):
 		# TODO: do stitching pipeline here
+
+		# TODO: Expect to have `self.stitch_result` value updated
+		"""
+		e.g.
+			self.stitch_result = {
+				"stitching_status": True,
+				"stitched_img_path": "./path/here/stit.jpg"
+			}
+		"""
 		pass
 
 	def get_stitch_result(self):

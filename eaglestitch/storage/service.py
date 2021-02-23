@@ -83,15 +83,17 @@ class StorageService(asab.Service):
 			return None
 
 	# TODO: define the format data of `stitch_result`
+	# TODO: Please make sure to use Thread to smooth the system, when saving to disk !!!
 	def save_img_to_disk(self, stitch_result):
 		"""
 		PUT THE INFORMATION HERE
 		"""
+		stored_img = None
 		try:
 			# TODO: Implement storing img data into a specific folder
-			# TODO HERE
+			# TO DO HERE
 
-			return True
+			return stored_img
 		except Exception as e:
 			L.error("Saving img to output directory failed due to: `{}`".format(e))
-			return False
+			return None

@@ -3,7 +3,6 @@ import asyncio
 import time
 import numpy as np
 from datetime import datetime
-from eaglestitch.image_subscriber.zenoh_pubsub.core.zenoh_net import ZenohNet
 from eaglestitch.image_subscriber.zenoh_pubsub.zenoh_net_subscriber import ZenohNetSubscriber
 import logging
 from concurrent.futures import ThreadPoolExecutor
@@ -99,17 +98,17 @@ class ImageSubscriberService(asab.Service):
 		L.warning(
 			('[%s] Latency reformat image (%.3f ms)' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
 
-		# TODO: append current captured img data
+		# append current captured img data
 		self.batch_imgs.append(deserialized_img)
 
-		# this is sample code on how to perform stitching
-		# TODO: when N number of images has been collected, send the tuple of images into stitching service
+		# when N number of images has been collected, send the tuple of images into stitching service
 		if self.batch_num == self.target_stitch:
 			# Send this tuple of imgs into stitching
 			try:
 				if not self.stitching_svc.stitch(self.batch_imgs, self.batch_num):
 					L.error("Stitching failed")
 					# TODO: If stitching failed, what's the behavior?
+					# Maybe nothing to do if FAILED.
 			except Exception as e:
 				L.error("Stitching pipiline failed. Reason: {}".format(e))
 

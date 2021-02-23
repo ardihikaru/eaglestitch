@@ -32,26 +32,23 @@ class StitchingService(asab.Service):
 		# L.log(LOG_NOTICE, "[STICHING] STITCHING SUCCEED!")
 
 		# if stitching succeed: [1] store stitched images into output directory
-		if not self._save_stitched_imgs_to_disk(stitch_result):
-			return False
+		if stitch_status:
+			self._save_stitched_imgs_to_disk(stitch_result)
 		L.warning("[STICHING] STITCHING RESULT HAS BEEN STORED!")
 		# L.log(LOG_NOTICE, "[STICHING] STITCHING RESULT HAS BEEN STORED!")
 
 		# if stitching succeed: [2] store input images into output directory
-		if not self._save_input_imgs_to_disk(collected_imgs):
-			return False
+		input_imgs = self._save_input_imgs_to_disk(collected_imgs)
 		L.warning("[STICHING] INPUT IMAGES HAS BEEN STORED!")
 		# L.log(LOG_NOTICE, "[STICHING] INPUT IMAGES HAS BEEN STORED!")
 
 		# if storing images succeed, save all those information into database
-		# TODO: change into a correct value
-		dummy_doc = {
-			"stitch_img_path": "./target/output/dir"
-		}
-
 		data_message_json = {
 			"collection": self.stitching_col,
-			"data": dummy_doc
+			"data": {
+				"stitch_result": stitch_result,
+				"input_imgs": input_imgs,
+			}
 		}
 		self.App.PubSub.publish(
 			"eaglestitch.StoragePubSub.message!",
@@ -76,14 +73,13 @@ class StitchingService(asab.Service):
 			return False, None
 
 	def _save_stitched_imgs_to_disk(self, stitch_result):
-		if not self.storage_svc.save_img_to_disk(stitch_result):
-			return False
-
-		return True
+		self.storage_svc.save_img_to_disk(stitch_result)
 
 	def _save_input_imgs_to_disk(self, collected_imgs):
+		stored_imgs = []
 		for img in collected_imgs:
-			if not self.storage_svc.save_img_to_disk(img):
-				return False
+			stored_img = self.storage_svc.save_img_to_disk(img)
+			if stored_img is not None:
+				stored_imgs.append(stored_img)
 
-		return True
+		return stored_imgs
