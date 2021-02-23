@@ -1,9 +1,13 @@
 # Optional Resources ----------------------------------------------------------------------------------------------
 .idea
-data/5g-dive/
-data/coco/
-output/*
-hasil
+
+# exception to the rule; for `mysql-data` folder
+!data/.gitkeep
+!data/sample_img.png
+
+# For uploaded images
+# exclude everything inside `mysql-data` folder
+data/*
 
  Repo-specific GitIgnore ----------------------------------------------------------------------------------------------
 *.jpg
