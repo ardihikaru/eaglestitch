@@ -1,6 +1,14 @@
 # Optional Resources ----------------------------------------------------------------------------------------------
 .idea
 
+# exception to the rule; for `mysql-data` folder
+!data/.gitkeep
+!data/sample_img.png
+
+# For uploaded images
+# exclude everything inside `mysql-data` folder
+data/*
+
  Repo-specific GitIgnore ----------------------------------------------------------------------------------------------
 *.jpg
 *.png

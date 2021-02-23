@@ -13,7 +13,7 @@ class StitchingResultSectionWebHandler(object):
 
 	def __init__(self, app):
 		self.App = app
-		self.stitching_api_svc = app.get_service("StitchingAPIService")
+		self.stitching_api_svc = app.get_service("eaglestitch.StitchingAPIService")
 
 		app.RESTWebContainer.WebApp.router.add_get('/stitching', self.get_stitching)
 		app.RESTWebContainer.WebApp.router.add_get('/stitching/{stitched_id}', self.get_stitching_by_id)

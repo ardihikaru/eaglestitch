@@ -1,1 +1,6 @@
 asab
+motor
+eclipse-zenoh
+numpy
+opencv-python
+simplejson
