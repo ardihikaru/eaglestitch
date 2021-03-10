@@ -12,6 +12,7 @@ class Stitch(object):
 		self.stitch_result = None
 
 	def run(self):
+		print("I am running stitching now")
 		# TODO: do stitching pipeline here
 
 		# TODO: Expect to have `self.stitch_result` value updated
@@ -25,4 +26,30 @@ class Stitch(object):
 		pass
 
 	def get_stitch_result(self):
+		print("I am collecting the result")
 		return self.stitch_result
+
+"""
+
+import cv2
+
+img1_path = "/home/s010132/devel/eagleeye/data/out1.png"  # TODO: to update this
+img1 = cv2.imread(img1_path)
+
+img2_path = "/home/s010132/devel/eagleeye/data/out1.png"  # TODO: to update this
+img2 = cv2.imread(img2_path)
+
+_batch_num = 2
+_imgs = [img1, img2]
+
+stitcher = Stitch(
+	imgs=_imgs,
+	batch_num=_batch_num
+)
+
+stitcher.run()
+
+_results = stitcher.get_stitch_result()
+print("## RESULT = {}".format(_results))
+
+"""
