@@ -25,6 +25,7 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 # How to use
 1. Activate environment: `$ . venv/bin/activate.fish`
 2. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
+3. Running Zenoh publisher: `$ python tests/net_publisher_img.py`
 
 # Common information
 - RestAPI URL: `$ http://<domain>:8888`
