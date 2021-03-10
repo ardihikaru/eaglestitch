@@ -15,13 +15,12 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
     - Instal toolchain: `$ rustup toolchain install nightly`
 1. Go to main project directory
 2. Install python virtual environment: `$ python3 -m venv venv`
-3. Upgrade `pip` version: `$ pip install --uppgrade pip`
-4. Execute these comamnds before installing **Zenoh**:
+3. Execute these comamnds before installing **Zenoh**:
     ```
     $ pip install --upgrade pip
     $ pip install maturin
     ```
-5 Install requirements: `$ pip install -r requirements.txt`
+4 Install requirements: `$ pip install -r requirements.txt`
 
 # How to use
 1. Activate environment: `$ . venv/bin/activate.fish`
