@@ -85,21 +85,41 @@ class ImageSubscriberService(asab.Service):
 		# For debugging only; please comment it once done the debugging session
 		# print(" ######### self.batch_num = ", self.batch_num)
 
+		# ####################### For tuple data
 		t0_decoding = time.time()
-		deserialized_bytes = np.frombuffer(consumed_data.payload, dtype=np.int8)
+		img_total_size = self.img_w * self.img_h * self.img_ch
+		encoder_format = [
+			('id', 'U10'),
+			('timestamp', 'f'),
+			('data', [('flatten', 'i')], (1, img_total_size)),
+			('store_enabled', '?'),
+		]
+		deserialized_bytes = np.frombuffer(consumed_data.payload, dtype=encoder_format)
+
 		t1_decoding = (time.time() - t0_decoding) * 1000
 		L.warning(
-			('[%s] Latency load ONLY numpy image (%.3f ms)' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+			('\n[%s] Latency img_info (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
 
 		t0_decoding = time.time()
-		deserialized_img = np.reshape(deserialized_bytes, newshape=(self.img_w, self.img_h, self.img_ch))
-		# print(">>> img_ori SHAPE:", deserialized_img.shape)
+
+		# decode data
+		img_info = {
+			"id": str(deserialized_bytes["id"][0]),
+			# "img": deserialized_bytes["data"]["flatten"][0].reshape(self.img_h, self.img_w, self.img_ch).astype(
+			"img": deserialized_bytes["data"]["flatten"][0].reshape(self.img_w, self.img_h, self.img_ch).astype(
+				"uint8"),
+			"timestamp": float(deserialized_bytes["timestamp"][0]),
+			"store_enabled": bool(deserialized_bytes["store_enabled"][0]),
+		}
+
 		t1_decoding = (time.time() - t0_decoding) * 1000
 		L.warning(
-			('[%s] Latency reformat image (%.3f ms)' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+			('\n[%s] Latency reformat image (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+		################################
 
 		# append current captured img data
-		self.batch_imgs.append(deserialized_img)
+		# self.batch_imgs.append(deserialized_img)
+		self.batch_imgs.append(img_info["img"])
 
 		# when N number of images has been collected, send the tuple of images into stitching service
 		if self.batch_num == self.target_stitch:
