@@ -5,6 +5,8 @@ etc/site.conf
 # exception to the rule; for `mysql-data` folder
 !data/.gitkeep
 !data/sample_img.png
+!data/results/.gitkeep
+!data/results/
 
 # For uploaded images
 # exclude everything inside `mysql-data` folder
