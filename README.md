@@ -33,3 +33,10 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 # Available APIs
 - Get all stithing results: `GET /stitching`
 - Get a specific stithing result: `GET /stitching/{stitching_id}`
+
+
+
+Reference:
+ - Stitching pipeline: https://github.com/tranleanh/image-panorama-stitching/blob/master/multi_image_pano.py
+ - Black region cropping for panorama image: https://www.pyimagesearch.com/2018/12/17/image-stitching-with-opencv-and-python/
+

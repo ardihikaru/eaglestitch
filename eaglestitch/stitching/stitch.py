@@ -1,5 +1,3 @@
-
-
 class Stitch(object):
         """
         This class perform image stitching by taking two parameters:
@@ -13,16 +11,6 @@ class Stitch(object):
 
         def run(self):
                 print("I am running stitching now")
-                # TODO: do stitching pipeline here
-
-                # TODO: Expect to have `self.stitch_result` value updated
-                """
-                e.g.
-                        self.stitch_result = {
-                                "stitching_status": True,
-                                "stitched_img_path": "./path/here/stit.jpg"
-                        }
-                """
 
                 ### OpenCV Stitcher ###
 
@@ -35,10 +23,12 @@ class Stitch(object):
                 # Perform image stitching
                 (status, stitched_img) = cv_stitcher.stitch(stitcher.imgs)
 
+                ### End  ###
+
                 if status == 0:
                         self.stitch_result = {
                             "stitching_status": True,
-                            "stitched_img_path": "/Users/tim/Desktop/devel/eaglestitch/sample-images/pano-5-eaglestitch.jpg"
+                            "stitched_img_path": "/Users/tim/Desktop/devel/eaglestitch/sample-images/pano-5-eaglestitch-output.jpg"
                         }
 
                         # Store stitched_img to disk
@@ -54,23 +44,24 @@ class Stitch(object):
                 print("I am collecting the result")
                 return self.stitch_result
 
+#####
+
 import cv2, imutils
+from imutils import paths
 
-img1_path = "/Users/tim/Desktop/devel/eaglestitch/sample-images/pano-5/pano-5-1.jpeg"  # TODO: to update this
-img1 = cv2.imread(img1_path)
+print('I am loading images ...')
 
-img2_path = "/Users/tim/Desktop/devel/eaglestitch/sample-images/pano-5/pano-5-2.jpeg"  # TODO: to update this
-img2 = cv2.imread(img2_path)
+source_path = '/Users/tim/Desktop/devel/eaglestitch/sample-images/pano-5/'
+img_source = sorted(list(paths.list_images(source_path)))
 
-img3_path = "/Users/tim/Desktop/devel/eaglestitch/sample-images/pano-5/pano-5-3.jpeg" # TODO: to update this
-img3 = cv2.imread(img3_path)
+_batch_num = 0
+_imgs = []
 
-img4_path = "/Users/tim/Desktop/devel/eaglestitch/sample-images/pano-5/pano-5-4.jpeg"  # TODO: to update this
-img4 = cv2.imread(img4_path)
-
-_batch_num = 4
-_imgs = [img1, img2, img3, img4]
-
+for an_img in img_source:
+    img_temp = cv2.imread(an_img)
+    _imgs.append(img_temp)
+    _batch_num = _batch_num + 1
+    
 stitcher = Stitch(
         imgs=_imgs,
         batch_num=_batch_num
