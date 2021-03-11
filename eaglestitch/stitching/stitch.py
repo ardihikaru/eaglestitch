@@ -1,10 +1,17 @@
+import cv2
+import imutils
 from extras.functions import get_current_datetime, create_folder
-from black_region_remover import BlackRegionRemover
+
+try:
+	from black_region_remover import BlackRegionRemover  # for direct execution
+except Exception as e:
+	from .black_region_remover import BlackRegionRemover  # for execution via EagleStitch System
 import logging
 
 ###
 
 L = logging.getLogger(__name__)
+
 
 ###
 
@@ -45,6 +52,10 @@ class Stitch(object):
 		# create a new folder to store the stitching source and result images
 		self._create_result_directory()
 
+		# Store source images (if enabled)
+		if self.config.get("store_input_imgs"):
+			self._store_source_imgs()
+
 		# generate stitched image path
 		stitched_img_path = self._generate_stitched_img_path(stitched_img)
 
@@ -56,10 +67,6 @@ class Stitch(object):
 			# Cropped and store stitched image (if enabled)
 			if self.config.get("crop"):
 				self._crop_and_store_stitched_img(stitched_img)
-
-			# Store source images (if enabled)
-			if self.config.get("store_input_imgs"):
-				self._store_source_imgs()
 
 		# save stitching result
 		self.stitch_result = {
@@ -87,7 +94,11 @@ class Stitch(object):
 			_idx += 1
 			# generate image name
 			_img_name = "source_img_{}".format(str(_idx))
-			_store_target_path = "{}/{}/{}.jpg".format(self.stitch_result_dir, self.config.get("source_img_name"), _img_name)
+			_store_target_path = "{}/{}/{}.jpg".format(
+				self.stitch_result_dir,
+				self.config.get("source_img_name"),
+				_img_name
+			)
 
 			# Store this source image
 			cv2.imwrite(_store_target_path, img)
@@ -130,7 +141,7 @@ class Stitch(object):
 			cv_stitcher = cv2.Stitcher_create()
 
 		# Perform image stitching
-		(stitching_error, stitched_img) = cv_stitcher.stitch(stitcher.imgs)
+		(stitching_error, stitched_img) = cv_stitcher.stitch(self.imgs)
 
 		stitching_succeed = True if stitching_error == 0 else False
 		return stitching_succeed, stitched_img
@@ -138,9 +149,10 @@ class Stitch(object):
 	def get_stitch_result(self):
 		return self.stitch_result
 
+
+"""
 #####
 
-import cv2, imutils
 from imutils import paths
 
 L.warning('[INFO] I am loading images ...')
@@ -176,3 +188,6 @@ stitcher = Stitch(
 stitcher.run()
 
 _results = stitcher.get_stitch_result()
+
+#####
+"""
