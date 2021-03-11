@@ -21,6 +21,16 @@ class StitchingService(asab.Service):
 		self.storage_svc = app.get_service("eaglestitch.StorageService")
 		self.stitching_col = asab.Config["stitching:config"]["collection"]
 
+		# setup config variables
+		self.config = {
+			"root_output_dir": asab.Config["stitching:config"]["root_output_dir"],
+			"store_input_imgs": asab.Config["stitching:config"].getboolean("store_input_imgs"),
+			"crop": asab.Config["stitching:config"].getboolean("crop"),
+			"source_img_name": asab.Config["stitching:config"]["source_img_name"],
+			"stitched_img_name": asab.Config["stitching:config"]["stitched_img_name"],
+			"crop_stitched_img_name": asab.Config["stitching:config"]["crop_stitched_img_name"],
+		}
+
 	def stitch(self, collected_imgs, batch_num):
 		L.warning("[STICHING] PERFORMING STITCHING FOR THIS TUPLE OF IMAGES")
 
@@ -63,8 +73,7 @@ class StitchingService(asab.Service):
 
 	def _stitch_imgs(self, imgs, batch_num):
 		try:
-			# TODO: implement stitching pipeline
-			sticher = Stitch(imgs, batch_num)
+			sticher = Stitch(imgs, batch_num, self.config)
 			sticher.run()
 
 			return True, sticher.get_stitch_result()
