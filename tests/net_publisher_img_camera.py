@@ -27,9 +27,8 @@ L = logging.getLogger(__name__)
 # [2] Data Type: Numpy Array (image)
 # encoder_format = None
 # itype = 2
-root_path = "/home/s010132/devel/eagleeye/data/out1.png"
-val = cv2.imread(root_path)
-print(" val SHAPE:", val.shape)
+# root_path = "/home/s010132/devel/eagleeye/data/out1.png"
+# val = cv2.imread(root_path)
 ###############################################################
 
 # [3] Data Type: Numpy Array with structured array format (image + other information)
@@ -83,7 +82,8 @@ encoder_format = [
 ]
 
 window_title = "output-raw"
-cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/0312_2_CUT.mp4")
 cv2.namedWindow(window_title, cv2.WND_PROP_FULLSCREEN)
 # cv2.resizeWindow("Image", 1920, 1080)  # Enter your size
 cv2.resizeWindow(window_title, 800, 550)  # Enter your size
