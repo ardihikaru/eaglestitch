@@ -18,7 +18,8 @@ class StitchingAPIService(asab.Service):
 	FN_C = "_c"
 	FN_M = "_m"
 
-	FN_STITCH_IMG_PATH = "stitch_img_path"
+	FN_STITCH_IMG_RESULT = "stitch_result"
+	FN_INPUT_IMGS = "input_imgs"
 
 	class ErrorMessage(object):
 		REQUEST_TIMEOUT = "REQUEST TIMEOUT"
@@ -33,7 +34,8 @@ class StitchingAPIService(asab.Service):
 		# list valid keys in this collection (to be shown)
 		self.keys = frozenset([
 			self.FN_ID,
-			self.FN_STITCH_IMG_PATH
+			self.FN_INPUT_IMGS,
+			self.FN_STITCH_IMG_RESULT,
 		])
 
 	async def get_stitching_result(self, stitched_id=None):
