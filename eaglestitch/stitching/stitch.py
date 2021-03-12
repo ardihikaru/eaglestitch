@@ -41,6 +41,7 @@ class Stitch(object):
 		self.imgs = imgs
 		self.stitch_result = None
 		self.stitch_result_dir = None
+		self.stored_input_imgs = []
 		self.config = config
 
 	def run(self):
@@ -100,6 +101,8 @@ class Stitch(object):
 				_img_name
 			)
 
+			self.stored_input_imgs.append(_store_target_path)
+
 			# Store this source image
 			cv2.imwrite(_store_target_path, img)
 		pass
@@ -148,6 +151,9 @@ class Stitch(object):
 
 	def get_stitch_result(self):
 		return self.stitch_result
+
+	def get_stored_input_imgs(self):
+		return self.stored_input_imgs
 
 
 """
