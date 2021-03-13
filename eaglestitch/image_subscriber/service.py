@@ -151,8 +151,6 @@ class ImageSubscriberService(asab.Service):
 				try:
 					if not self.stitching_svc.stitch(self.batch_imgs, self.batch_num):
 						L.error("Stitching failed")
-				# TODO: If stitching failed, what's the behavior?
-				# Maybe nothing to do if FAILED.
 				except Exception as e:
 					L.error("[ZENOH CONSUMER] Stitching pipiline failed. Reason: {}".format(e))
 
