@@ -57,6 +57,21 @@ class ImageSubscriberService(asab.Service):
 		self.sub_svc = None
 		self.subscriber = None
 
+		# Load Stitching Manager Consumer
+		self.App.PubSub.subscribe("eaglestitch.StitchingManagerPubSub.message!", self._on_pubsub_stitching_manager)
+
+		# set stitching processor status: enabled (true) by default
+		self._processor_status = True
+
+	async def _on_pubsub_stitching_manager(self, event_type, enable_processor):
+		"""
+		This function simply disable or enable stitching processor
+		:param event_type: `event_type` value is `eaglestitch.StoragePubSub.message!`
+		:param enable_processor: an action to start or stop the stitching processor
+		:return:
+		"""
+		self._processor_status = enable_processor
+
 	async def initialize(self, app):
 		# validate PubSub mode
 		if await self._validate_pubsub_mode():
@@ -98,7 +113,7 @@ class ImageSubscriberService(asab.Service):
 
 		t1_decoding = (time.time() - t0_decoding) * 1000
 		L.warning(
-			('\n[%s] Latency img_info (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+			('\n[ZENOH CONSUMER][%s] Latency img_info (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
 
 		t0_decoding = time.time()
 
@@ -114,27 +129,36 @@ class ImageSubscriberService(asab.Service):
 
 		t1_decoding = (time.time() - t0_decoding) * 1000
 		L.warning(
-			('\n[%s] Latency reformat image (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+			('\n[ZENOH CONSUMER][%s] Latency reformat image (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
 		################################
 
-		# append current captured img data
-		# self.batch_imgs.append(deserialized_img)
-		self.batch_imgs.append(img_info["img"])
-
-		# when N number of images has been collected, send the tuple of images into stitching service
-		if self.batch_num == self.target_stitch:
-			# Send this tuple of imgs into stitching
-			try:
-				if not self.stitching_svc.stitch(self.batch_imgs, self.batch_num):
-					L.error("Stitching failed")
-					# TODO: If stitching failed, what's the behavior?
-					# Maybe nothing to do if FAILED.
-			except Exception as e:
-				L.error("Stitching pipiline failed. Reason: {}".format(e))
-
-			# Reset the value
+		# check stitching processor status
+		# if disabled (false), simply do nothing and make sure to empty any related variables
+		if not self._processor_status:
+			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
+			# Always empty any related variables
 			self.batch_num = 0
 			self.batch_imgs = []
+
+		# if enabled, perform the stitching processor
+		else:
+			# append current captured img data
+			self.batch_imgs.append(img_info["img"])
+
+			# when N number of images has been collected, send the tuple of images into stitching service
+			if self.batch_num == self.target_stitch:
+				# Send this tuple of imgs into stitching
+				try:
+					if not self.stitching_svc.stitch(self.batch_imgs, self.batch_num):
+						L.error("Stitching failed")
+				# TODO: If stitching failed, what's the behavior?
+				# Maybe nothing to do if FAILED.
+				except Exception as e:
+					L.error("[ZENOH CONSUMER] Stitching pipiline failed. Reason: {}".format(e))
+
+				# Reset the value
+				self.batch_num = 0
+				self.batch_imgs = []
 
 	def _start_zenoh(self):
 		self.sub_svc = ZenohNetSubscriber(
