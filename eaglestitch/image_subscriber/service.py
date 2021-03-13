@@ -61,7 +61,11 @@ class ImageSubscriberService(asab.Service):
 		self.App.PubSub.subscribe("eaglestitch.StitchingManagerPubSub.message!", self._on_pubsub_stitching_manager)
 
 		# set stitching processor status: enabled (true) by default
-		self._processor_status = True
+		self._processor_status = asab.Config["stitching:config"].getboolean("processor")
+
+		# Show WARNING to the log if the processor is DISABLED on load system
+		if not self._processor_status:
+			L.warning(">>> [IMPORTANT] Stitching Processor is DISABLED On load system <<<")
 
 	async def _on_pubsub_stitching_manager(self, event_type, enable_processor):
 		"""
