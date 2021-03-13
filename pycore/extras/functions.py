@@ -20,3 +20,10 @@ def get_current_datetime_ms(is_folder=False):
 def create_folder(target_path):
 	if not path.exists(target_path):
 		os.mkdir(target_path)
+
+
+def is_img_exist(target_path):
+	if path.exists(target_path):
+		return True
+	else:
+		return False

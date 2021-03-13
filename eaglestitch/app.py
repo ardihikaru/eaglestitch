@@ -9,6 +9,7 @@ import logging
 from .system_manager import SystemManagerModule
 from .storage import StorageModule
 from .stitching_api import StitchingAPIModule
+from .webviewer import WebviewerModule
 from .stitching import StitchingModule
 from .image_subscriber import ImageSubscriberModule
 
@@ -43,6 +44,7 @@ class EagleStitchApplication(asab.Application):
 		self.add_module(SystemManagerModule)
 		self.add_module(StorageModule)  # please make sure that this module is loaded before any other modules
 		self.add_module(StitchingAPIModule)
+		self.add_module(WebviewerModule)
 		self.add_module(StitchingModule)  # this should be loaded BEFORE `Image Subscriber Module`
 		self.add_module(ImageSubscriberModule)
 
