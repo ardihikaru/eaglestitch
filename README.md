@@ -20,7 +20,7 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
     $ pip install --upgrade pip
     $ pip install maturin
     ```
-4 Install requirements: `$ pip install -r requirements.txt`
+4. Install requirements: `$ pip install -r requirements.txt`
 
 # How to use
 1. Activate environment: `$ . venv/bin/activate.fish`
@@ -33,8 +33,12 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 # Available APIs
 - Get all stithing results: `GET /stitching`
 - Get a specific stithing result: `GET /stitching/{stitching_id}`
+- Ask system to **START** the **stitching processor**: `GET /stitching/trigger/start`
+- Ask system to **STOP** the **stitching processor**: `GET /stitching/trigger/stop`
 
-
+# Available WebViews
+- Homepage: `http://localhost:8888`
+- Show stitching result: `http://localhost:8888/webview/{stitching_id}`
 
 Reference:
  - Stitching pipeline: https://github.com/tranleanh/image-panorama-stitching/blob/master/multi_image_pano.py
