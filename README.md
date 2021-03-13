@@ -8,24 +8,38 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 4. [Mongo Database](https://www.mongodb.com/)
 5. Zenoh API wrapper: [Zenoh-as-a-Service](https://github.com/ardihikaru/zenoh-as-a-service)
 6. [Rust](https://www.rust-lang.org/) as the base code of [Zenoh](http://zenoh.io/)
+7. [Fish Shell](https://github.com/fish-shell/fish-shell) 
+    and [Oh-My-Fish](https://github.com/oh-my-fish/oh-my-fish) (**OPTIONAL, but recommended**)
 
-# Installation
+# Installation (`Fish Shell`)
 1. Install [Rust toolchain](https://rustup.rs/) (for Zenoh usage)
-    - Install rustop: `$ sudo snap install rustup --classic`
+    - Install rustop: `$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+    - Install `Rustup` plugin:
+        `$ omf install rustup`
     - Instal toolchain: `$ rustup toolchain install nightly`
-1. Go to main project directory
-2. Install python virtual environment: `$ python3 -m venv venv`
-3. Execute these comamnds before installing **Zenoh**:
-    ```
-    $ pip install --upgrade pip
-    $ pip install maturin
-    ```
-4. Install requirements: `$ pip install -r requirements.txt`
+2. Update **Host Maching**'s python3 pip version: `$ pip3 install --upgrade pip`
+3. Install following package in **Host Maching**:
+    - Maturin: `$ pip3 install maturin`
+    - Eclipse-Zenoh: `$ pip3 install eclipse-zenoh`
+4. Go to main project directory
+5. Install python virtual environment: `$ python3 -m venv venv`
+6. Activate python virtual environment: `$ . venv/bin/activate.fish`
+7. Install requirements: `$ pip install -r requirements.txt`
+    - **IMPORTANT**: Package `eclipse-zenoh` is already installed in `step-3`
+8. Install Zenoh API connector (with Rust-based Zenoh):
+    - Go to `venv` directory: `$ cd venv`
+    - Clone zenoh: `$ git clone https://github.com/eclipse-zenoh/zenoh-python.git`
+    - Go to cloned Zenoh directory: `$ cd zenoh-python`
+    - Build the package: `$ maturin develop —release`
+
+# Installation (`Bash Shell`)
+**// TODO**
 
 # How to use
-1. Activate environment: `$ . venv/bin/activate.fish`
-2. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
-3. Running Zenoh publisher: `$ python tests/net_publisher_img.py`
+1. Go to root project directory: `$ cd /../eaglestitch/`
+2. Activate python virtual environment: `$ . venv/bin/activate.fish`
+3. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
+4. Running Zenoh publisher: `$ python tests/net_publisher_img.py`
 
 # Common information
 - RestAPI URL: `$ http://<domain>:8888`
