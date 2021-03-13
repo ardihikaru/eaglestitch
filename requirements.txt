@@ -4,3 +4,5 @@ eclipse-zenoh
 numpy
 opencv-python
 simplejson
+opencv-contrib-python
+imutils
