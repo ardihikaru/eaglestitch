@@ -1,3 +1,48 @@
+## 0.3.0 (March 14, 2021)
+  - Merge branch 'feature/webview-image' into develop
+  - add config to enable/disable Stitching Processor on load system
+  - add cropped stitching result into DB
+  - - add static path source - add new endpoint to show stitched image result
+  - add stitched image data loader
+  - remove printing
+  - add feature to enable/disable url-based response
+  - add jinja template for showing stitching image result
+  - add webview related config
+  - add a function to check the existance of the image file
+  - add image not found file
+  - add `aiohttp-jinja2` lib
+  - add base webview handler with index homepage
+  - Merge branch 'feature/stitching-manager' into develop
+  - remove todo: if stitching failed, it simply add status `False` when stored into DB
+  - add new feature to START and STOP stitching via a Restful API
+  - implement thread-based stitching execution
+  - introduce config to execute stitching in a thread-level
+  - Merge branch 'feature/stitch' into develop
+  - bugfix: store input image paths
+  - - code refactor - get stored input image paths
+  - remove unused codes
+  - - disable dummy print - load image input video file
+  - - bugfix: fix wrong field name - add `input_imgs`
+  - change image input type into a customized input
+  - add config info
+  - - code refactor - store source images by default (if enabled)
+  - add more parameters related to stitching
+  - add publisher based on video camera input
+  - - code refactoring - complete the logic implementation
+  - add config parameters related with stitching results
+  - add core library
+  - ignore `results` folder
+  - refactor function into a class
+  - ignore `site.conf`
+  - remove unused dummy images
+  - add dummy panorama input images
+  - Added the code for removing black region
+  - Added the code for stitching
+  - add doc how to use zenoh publisher
+  - add doc how to code on this class
+  - fix typo
+  - Merge branch 'release/0.2.1' into develop
+
 ## 0.2.1 (February 23, 2021)
   - Merge pull request #2 from ardihikaru/bugfix/code-refactor
   - - code refactor the logic on storing images into files - bugfix: wrong respone message in API - update comments

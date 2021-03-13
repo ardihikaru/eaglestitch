@@ -4,6 +4,8 @@ from .stitch import Stitch
 import logging
 from asab.log import LOG_NOTICE
 from eaglestitch.image_subscriber.zenoh_pubsub.zenoh_net_publisher import ZenohNetPublisher
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 ###
 
@@ -21,26 +23,36 @@ class StitchingService(asab.Service):
 		self.storage_svc = app.get_service("eaglestitch.StorageService")
 		self.stitching_col = asab.Config["stitching:config"]["collection"]
 
+		# setup config variables
+		self.config = {
+			"root_output_dir": asab.Config["stitching:config"]["root_output_dir"],
+			"store_input_imgs": asab.Config["stitching:config"].getboolean("store_input_imgs"),
+			"crop": asab.Config["stitching:config"].getboolean("crop"),
+			"source_img_name": asab.Config["stitching:config"]["source_img_name"],
+			"stitched_img_name": asab.Config["stitching:config"]["stitched_img_name"],
+			"crop_stitched_img_name": asab.Config["stitching:config"]["crop_stitched_img_name"],
+		}
+
+		# Thread executors
+		self.executor = ThreadPoolExecutor(asab.Config["thread"].getint("num_executor"))
+		self.threaded = asab.Config["stitching:config"].getboolean("threaded")
+
 	def stitch(self, collected_imgs, batch_num):
 		L.warning("[STICHING] PERFORMING STITCHING FOR THIS TUPLE OF IMAGES")
 
 		# perform stitching
-		stitch_status, stitch_result = self._stitch_imgs(collected_imgs, batch_num)
+		if self.threaded:
+			self._threaded_stitching_manager(collected_imgs, batch_num)
+		else:
+			self._exec_stitching(collected_imgs, batch_num)
+
+		return True
+
+	def _exec_stitching(self, collected_imgs, batch_num):
+		stitch_status, stitch_result, input_imgs = self._stitch_imgs(collected_imgs, batch_num)
 		if not stitch_status:
 			return False
 		L.warning("[STICHING] STITCHING SUCCEED!")
-		# L.log(LOG_NOTICE, "[STICHING] STITCHING SUCCEED!")
-
-		# if stitching succeed: [1] store stitched images into output directory
-		if stitch_status:
-			self._save_stitched_imgs_to_disk(stitch_result)
-		L.warning("[STICHING] STITCHING RESULT HAS BEEN STORED!")
-		# L.log(LOG_NOTICE, "[STICHING] STITCHING RESULT HAS BEEN STORED!")
-
-		# if stitching succeed: [2] store input images into output directory
-		input_imgs = self._save_input_imgs_to_disk(collected_imgs)
-		L.warning("[STICHING] INPUT IMAGES HAS BEEN STORED!")
-		# L.log(LOG_NOTICE, "[STICHING] INPUT IMAGES HAS BEEN STORED!")
 
 		# if storing images succeed, save all those information into database
 		data_message_json = {
@@ -57,29 +69,28 @@ class StitchingService(asab.Service):
 		)
 
 		L.warning("[STICHING] STITCHING RESULT INFORMATION HAS BEEN LOGGED INTO DATABASE!")
-		# L.log(LOG_NOTICE, "[STICHING] STITCHING RESULT INFORMATION HAS BEEN LOGGED INTO DATABASE!")
 
-		return True
+	def _threaded_stitching_manager(self, collected_imgs, batch_num):
+		L.warning('[threaded_stitch_manager] Start a thread-based Stitching Manager')
+		t0_thread = time.time()
+
+		try:
+			kwargs = {
+				"collected_imgs": collected_imgs,
+				"batch_num": batch_num
+			}
+			self.executor.submit(self._exec_stitching, **kwargs)
+		except Exception as e:
+			L.error("[threaded_stitch_manager] Somehow we unable to Start the Thread: {}".format(e))
+		t1_thread = (time.time() - t0_thread) * 1000
+		L.warning('[threaded_stitch_manager] Latency for Start Scheduler Manager (%.3f ms)' % t1_thread)
 
 	def _stitch_imgs(self, imgs, batch_num):
 		try:
-			# TODO: implement stitching pipeline
-			sticher = Stitch(imgs, batch_num)
+			sticher = Stitch(imgs, batch_num, self.config)
 			sticher.run()
 
-			return True, sticher.get_stitch_result()
+			return True, sticher.get_stitch_result(), sticher.get_stored_input_imgs()
 		except Exception as e:
 			L.error("Stitching failed due to: `{}`".format(e))
 			return False, None
-
-	def _save_stitched_imgs_to_disk(self, stitch_result):
-		self.storage_svc.save_img_to_disk(stitch_result)
-
-	def _save_input_imgs_to_disk(self, collected_imgs):
-		stored_imgs = []
-		for img in collected_imgs:
-			stored_img = self.storage_svc.save_img_to_disk(img)
-			if stored_img is not None:
-				stored_imgs.append(stored_img)
-
-		return stored_imgs

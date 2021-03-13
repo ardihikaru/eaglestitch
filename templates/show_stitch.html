@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}
+Stitching Result
+{% endblock %}
+
+{% block content %}
+<h1>Stitching Result: {{ status }}</h1>
+<p>
+    <img src="{{ static(img) }}" alt="">
+</p>
+<hr>
+
+{% endblock %}

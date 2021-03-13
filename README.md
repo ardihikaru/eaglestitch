@@ -15,17 +15,17 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
     - Instal toolchain: `$ rustup toolchain install nightly`
 1. Go to main project directory
 2. Install python virtual environment: `$ python3 -m venv venv`
-3. Upgrade `pip` version: `$ pip install --uppgrade pip`
-4. Execute these comamnds before installing **Zenoh**:
+3. Execute these comamnds before installing **Zenoh**:
     ```
     $ pip install --upgrade pip
     $ pip install maturin
     ```
-5 Install requirements: `$ pip install -r requirements.txt`
+4 Install requirements: `$ pip install -r requirements.txt`
 
 # How to use
 1. Activate environment: `$ . venv/bin/activate.fish`
 2. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
+3. Running Zenoh publisher: `$ python tests/net_publisher_img.py`
 
 # Common information
 - RestAPI URL: `$ http://<domain>:8888`
@@ -33,3 +33,10 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 # Available APIs
 - Get all stithing results: `GET /stitching`
 - Get a specific stithing result: `GET /stitching/{stitching_id}`
+
+
+
+Reference:
+ - Stitching pipeline: https://github.com/tranleanh/image-panorama-stitching/blob/master/multi_image_pano.py
+ - Black region cropping for panorama image: https://www.pyimagesearch.com/2018/12/17/image-stitching-with-opencv-and-python/
+
