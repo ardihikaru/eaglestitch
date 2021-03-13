@@ -18,7 +18,6 @@ class StitchingControllerSectionWebHandler(object):
 		app.RESTWebContainer.WebApp.router.add_get('/stitching/trigger/{action}', self.capture_trigger_action)
 
 	async def capture_trigger_action(self, request):
-		print("## capture_trigger_action")
 		action = (request.match_info["action"]).lower()
 		if action is None:
 			L.error("`action` is missing from request.")
