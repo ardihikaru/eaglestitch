@@ -82,10 +82,17 @@ class StitchingAPIService(asab.Service):
 		return _status, _msg, _data
 
 	async def _convert_all_paths_to_url(self, result, root_url):
-		# convert stitching result from file path into URL
+		# convert stitching result and cropped stitching results from file path into URL
 		if result["stitch_result"].get("stitching_status"):
+			# convert stitching result from file path into URL
 			result["stitch_result"]["stitched_img_path"] = await self._stitch_img_path_to_url(
 				result["stitch_result"].get("stitched_img_path"),
+				root_url
+			)
+
+			# convert cropped stitching result from file path into URL
+			result["stitch_result"]["crop_stitched_img_path"] = await self._stitch_img_path_to_url(
+				result["stitch_result"].get("crop_stitched_img_path"),
 				root_url
 			)
 

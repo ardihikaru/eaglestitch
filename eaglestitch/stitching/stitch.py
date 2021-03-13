@@ -40,6 +40,7 @@ class Stitch(object):
 		self.batch_num = batch_num
 		self.imgs = imgs
 		self.stitch_result = None
+		self.crop_stitch_result = None
 		self.stitch_result_dir = None
 		self.stored_input_imgs = []
 		self.config = config
@@ -60,6 +61,9 @@ class Stitch(object):
 		# generate stitched image path
 		stitched_img_path = self._generate_stitched_img_path(stitched_img)
 
+		# generate Cropped stitched image path (this var will not be used if Stitching failed)
+		clean_stitched_img_path = self._generate_cropped_stitched_img_path()
+
 		# Store `stitched_img` and source images to disk if stitching succeed
 		if stitching_succeed:
 			# Store stitched image
@@ -67,22 +71,24 @@ class Stitch(object):
 
 			# Cropped and store stitched image (if enabled)
 			if self.config.get("crop"):
-				self._crop_and_store_stitched_img(stitched_img)
+				self._crop_and_store_stitched_img(clean_stitched_img_path, stitched_img)
+			else:
+				clean_stitched_img_path = None
+		else:
+			clean_stitched_img_path = None
 
 		# save stitching result
 		self.stitch_result = {
 			"stitching_status": stitching_succeed,
-			"stitched_img_path": stitched_img_path
+			"stitched_img_path": stitched_img_path,
+			"crop_stitched_img_path": clean_stitched_img_path,
 		}
 
-	def _crop_and_store_stitched_img(self, stitched_img):
+	def _crop_and_store_stitched_img(self, clean_stitched_img_path, stitched_img):
 		# Remove black region
 		black_region_remover = BlackRegionRemover(stitched_img)
 		black_region_remover.remove_black_region()
 		_clean_stitched_img = black_region_remover.get_cropped_img()
-
-		# generate stitched image path
-		clean_stitched_img_path = self._generate_cropped_stitched_img_path()
 
 		# Store clean stitched image
 		cv2.imwrite(clean_stitched_img_path, _clean_stitched_img)
@@ -151,6 +157,9 @@ class Stitch(object):
 
 	def get_stitch_result(self):
 		return self.stitch_result
+
+	def get_crop_stitch_result(self):
+		return self.crop_stitch_result
 
 	def get_stored_input_imgs(self):
 		return self.stored_input_imgs
