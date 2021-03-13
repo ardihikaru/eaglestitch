@@ -1,3 +1,10 @@
+## 0.3.1 (March 14, 2021)
+  - Merge branch 'feature/readme-api' into develop
+  - update fixed and more detail installation guide
+  - remove `eclipse-zenoh` package
+  - update available APIs; add available Web Pages
+  - Merge branch 'release/0.3' into develop
+
 ## 0.3.0 (March 14, 2021)
   - Merge branch 'feature/webview-image' into develop
   - add config to enable/disable Stitching Processor on load system
