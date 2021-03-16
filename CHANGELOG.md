@@ -1,3 +1,15 @@
+## 0.4.0 (March 17, 2021)
+  - Merge branch 'feature/live-config-update' into develop
+  - bugfix: wrong stitching mode implementation; code refactor
+  - implement publisher for live config update request
+  - add new API: PUT /stitching/config
+  - add new classes: `ConfigurableVars` and `StitchingMode`
+  - Merge branch 'feature/stitch-mode' into develop
+  - implement configurable stitching mode
+  - add config to change stitching mode
+  - add test code to publish all extracted frames
+  - Merge branch 'release/0.3.1' into develop
+
 ## 0.3.1 (March 14, 2021)
   - Merge branch 'feature/readme-api' into develop
   - update fixed and more detail installation guide
