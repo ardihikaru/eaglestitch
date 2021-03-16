@@ -22,10 +22,15 @@ class ImageSubscriberService(asab.Service):
 		ERR_ZENOH_SUBSCRIPTION = "system_err_002"
 		ERR_REDIS_MODE = "system_err_003"
 		ERR_SUBSCRIPTION_SELECTOR = "system_err_004"
+		ERR_STITCHING_MODE = "system_err_005"
 
 	class PubSubMode(object):
 		ZENOH = "zenoh"
 		REDIS = "redis"
+
+	class StitchingMode(object):
+		BATCH = 1
+		FULL = 2
 
 	def __init__(self, app, service_name="eaglestitch.ImageSubscriberService"):
 		super().__init__(app, service_name)
@@ -34,9 +39,20 @@ class ImageSubscriberService(asab.Service):
 		self.System_manager = app.get_service('eaglestitch.SystemManagerService')
 		self.stitching_svc = app.get_service("eaglestitch.StitchingService")
 
+		# stitching mode
+		self._stitching_mode = asab.Config["stitching:config"].getint("mode")
+
+		# config for Stitching mode = 1 (BATCH)
+		self.target_stitch = asab.Config["stitching:config"].getint("target_stitch")
+
+		# config for Stitching mode = 1 (FULL)
+		self.frame_skip = asab.Config["stitching:config"].getint("frame_skip")
+		self.max_frames = asab.Config["stitching:config"].getint("max_frames")
+		self.frame_skip_counter = 0
+		self.enqueued_frames = 0
+
 		self.batch_num = 0  # we will reset this value once finished sending tuple of imgs into stitching service
 		self.batch_imgs = []  # we will reset this value once finished sending tuple of imgs into stitching service
-		self.target_stitch = asab.Config["stitching:config"].getint("target_stitch")
 		# input and target stitched image resolution
 		self.img_w = asab.Config["stitching:config"].getint("img_w")
 		self.img_h = asab.Config["stitching:config"].getint("img_h")
@@ -77,8 +93,8 @@ class ImageSubscriberService(asab.Service):
 		self._processor_status = enable_processor
 
 	async def initialize(self, app):
-		# validate PubSub mode
-		if await self._validate_pubsub_mode():
+		# validate PubSub and Stitching mode
+		if await self._validate_pubsub_mode() and await self._validate_stitching_mode():
 			await self.subscription()
 
 	async def _validate_pubsub_mode(self):
@@ -97,6 +113,93 @@ class ImageSubscriberService(asab.Service):
 			return False
 
 		return True
+
+	async def _validate_stitching_mode(self):
+		_valid_mode = frozenset([
+			self.StitchingMode.BATCH,
+			self.StitchingMode.FULL
+		])
+		if self._stitching_mode not in _valid_mode:
+			_err_msg = ">>>>> Invalid Stitching mode; Available mode: `1` (BATCH; default) and `2` (FULL)"
+			L.error(_err_msg)
+			await self.System_manager.publish_error(
+				system_code=self.ErrorCode.ERR_STITCHING_MODE,
+				system_message=_err_msg
+			)
+
+			return False
+
+		return True
+
+	def __exec_stitching_in_batch_mode(self, img_info):
+		# check stitching processor status
+		# if disabled (false), simply do nothing and make sure to empty any related variables
+		if not self._processor_status:
+			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
+			# Always empty any related variables
+			self.batch_num = 0
+			self.batch_imgs = []
+			self.frame_skip_counter = 0
+			self.enqueued_frames = 0
+
+		# if enabled, perform the stitching processor
+		else:
+			# skip frames (if enabled)
+			# append current captured img data
+			if self.batch_num == 1 or (0 < self.frame_skip == self.frame_skip_counter):
+				self.batch_imgs.append(img_info["img"])
+				self.enqueued_frames += 1
+				self.frame_skip_counter = 0  # reset skip counter
+
+			# if self.frame_skip > 0 and self.frame_skip_counter < self.frame_skip:
+			else:
+				self.frame_skip_counter += 1
+
+			# when max_frames == 0 or (max_frames > 0 and total number of enqueued frames >= max_frames),
+			# close the pool and start the stitching pipeline
+			if self.max_frames == 0 or (self.max_frames != 0 and self.enqueued_frames == self.max_frames):
+				# Send this tuple of imgs into stitching
+				try:
+					if not self.stitching_svc.stitch(self.batch_imgs, self.enqueued_frames):
+						L.error("Stitching failed")
+				except Exception as e:
+					L.error("[ZENOH CONSUMER] Stitching pipiline failed. Reason: {}".format(e))
+
+				# Reset the value
+				self.batch_num = 0
+				self.batch_imgs = []
+				self.frame_skip_counter = 0
+				self.enqueued_frames = 0
+
+				# Force stop the stitching processor
+				self._processor_status = False
+
+	def __exec_stitching_in_full_mode(self, img_info):
+		# check stitching processor status
+		# if disabled (false), simply do nothing and make sure to empty any related variables
+		if not self._processor_status:
+			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
+			# Always empty any related variables
+			self.batch_num = 0
+			self.batch_imgs = []
+
+		# if enabled, perform the stitching processor
+		else:
+			# append current captured img data
+			self.batch_imgs.append(img_info["img"])
+
+			# when N number of images has been collected, send the tuple of images into stitching service
+			if self.batch_num == self.target_stitch:
+				# Send this tuple of imgs into stitching
+				try:
+					if not self.stitching_svc.stitch(self.batch_imgs, self.batch_num):
+						L.error("Stitching failed")
+				except Exception as e:
+					L.error("[ZENOH CONSUMER] Stitching pipiline failed. Reason: {}".format(e))
+
+				# Reset the value
+				self.batch_num = 0
+				self.batch_imgs = []
 
 	def img_listener(self, consumed_data):
 		self.batch_num += 1
@@ -136,31 +239,16 @@ class ImageSubscriberService(asab.Service):
 			('\n[ZENOH CONSUMER][%s] Latency reformat image (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
 		################################
 
-		# check stitching processor status
-		# if disabled (false), simply do nothing and make sure to empty any related variables
-		if not self._processor_status:
-			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
-			# Always empty any related variables
-			self.batch_num = 0
-			self.batch_imgs = []
+		# Check Stitching mode
+		# Batch mode
+		# It will enqueue up to `target_stitch` frames and do stitching each
+		if self._stitching_mode == self.StitchingMode.BATCH:
+			self.__exec_stitching_in_batch_mode(img_info)
 
-		# if enabled, perform the stitching processor
-		else:
-			# append current captured img data
-			self.batch_imgs.append(img_info["img"])
-
-			# when N number of images has been collected, send the tuple of images into stitching service
-			if self.batch_num == self.target_stitch:
-				# Send this tuple of imgs into stitching
-				try:
-					if not self.stitching_svc.stitch(self.batch_imgs, self.batch_num):
-						L.error("Stitching failed")
-				except Exception as e:
-					L.error("[ZENOH CONSUMER] Stitching pipiline failed. Reason: {}".format(e))
-
-				# Reset the value
-				self.batch_num = 0
-				self.batch_imgs = []
+		# Full mode
+		# It will enqueue all captured images (except skipped frames and/or hard limited) and do stitching only ONCE
+		elif self._stitching_mode == self.StitchingMode.FULL:
+			self.__exec_stitching_in_full_mode(img_info)
 
 	def _start_zenoh(self):
 		self.sub_svc = ZenohNetSubscriber(
@@ -198,7 +286,10 @@ class ImageSubscriberService(asab.Service):
 
 	async def _stop_subscription(self):
 		if self.pubsub_mode == self.PubSubMode.ZENOH:
-			self.sub_svc.close_connection(self.subscriber)
+			try:
+				self.sub_svc.close_connection(self.subscriber)
+			except AttributeError as e:
+				pass
 
 	async def subscription(self):
 		if self.pubsub_mode == self.PubSubMode.ZENOH:
