@@ -5,6 +5,7 @@ import numpy as np
 from datetime import datetime
 from eaglestitch.image_subscriber.zenoh_pubsub.zenoh_net_subscriber import ZenohNetSubscriber
 import logging
+from configurable_vars.configurable_vars import ConfigurableVars, StitchingMode
 from concurrent.futures import ThreadPoolExecutor
 
 ###
@@ -27,10 +28,6 @@ class ImageSubscriberService(asab.Service):
 	class PubSubMode(object):
 		ZENOH = "zenoh"
 		REDIS = "redis"
-
-	class StitchingMode(object):
-		BATCH = 1
-		FULL = 2
 
 	def __init__(self, app, service_name="eaglestitch.ImageSubscriberService"):
 		super().__init__(app, service_name)
@@ -83,14 +80,28 @@ class ImageSubscriberService(asab.Service):
 		if not self._processor_status:
 			L.warning(">>> [IMPORTANT] Stitching Processor is DISABLED On load system <<<")
 
-	async def _on_pubsub_stitching_manager(self, event_type, enable_processor):
+	async def _on_pubsub_stitching_manager(self, event_type, config):
 		"""
 		This function simply disable or enable stitching processor
 		:param event_type: `event_type` value is `eaglestitch.StoragePubSub.message!`
 		:param enable_processor: an action to start or stop the stitching processor
 		:return:
 		"""
-		self._processor_status = enable_processor
+
+		# WARNING! Prevent on changing variable when Stitching is currently Enabled
+		# `processor_status` should be disabled first
+		if not self._processor_status and ConfigurableVars.STITCHING_MODE.value in config:
+			self._stitching_mode = config[ConfigurableVars.STITCHING_MODE.value]
+		if not self._processor_status and ConfigurableVars.TARGET_STITCH.value in config:
+			self.target_stitch = config[ConfigurableVars.TARGET_STITCH.value]
+		if not self._processor_status and ConfigurableVars.FRAME_SKIP.value in config:
+			self.frame_skip = config[ConfigurableVars.FRAME_SKIP.value]
+		if not self._processor_status and ConfigurableVars.MAX_FRAMES.value in config:
+			self.max_frames = config[ConfigurableVars.MAX_FRAMES.value]
+
+		# check each configurable vars
+		if ConfigurableVars.PROCESSOR_STATUS.value in config:
+			self._processor_status = config[ConfigurableVars.PROCESSOR_STATUS.value]
 
 	async def initialize(self, app):
 		# validate PubSub and Stitching mode
@@ -116,8 +127,8 @@ class ImageSubscriberService(asab.Service):
 
 	async def _validate_stitching_mode(self):
 		_valid_mode = frozenset([
-			self.StitchingMode.BATCH,
-			self.StitchingMode.FULL
+			StitchingMode.BATCH.value,
+			StitchingMode.FULL.value
 		])
 		if self._stitching_mode not in _valid_mode:
 			_err_msg = ">>>>> Invalid Stitching mode; Available mode: `1` (BATCH; default) and `2` (FULL)"
@@ -132,74 +143,51 @@ class ImageSubscriberService(asab.Service):
 		return True
 
 	def __exec_stitching_in_batch_mode(self, img_info):
-		# check stitching processor status
-		# if disabled (false), simply do nothing and make sure to empty any related variables
-		if not self._processor_status:
-			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
-			# Always empty any related variables
+		# append current captured img data
+		self.batch_imgs.append(img_info["img"])
+
+		# when N number of images has been collected, send the tuple of images into stitching service
+		if self.batch_num == self.target_stitch:
+			# Send this tuple of imgs into stitching
+			try:
+				if not self.stitching_svc.stitch(self.batch_imgs, self.batch_num):
+					L.error("Stitching failed")
+			except Exception as e:
+				L.error("[ZENOH CONSUMER] Stitching pipiline failed. Reason: {}".format(e))
+
+			# Reset the value
+			self.batch_num = 0
+			self.batch_imgs = []
+
+	def __exec_stitching_in_full_mode(self, img_info):
+		# skip frames (if enabled)
+		# append current captured img data
+		if self.batch_num == 1 or (0 < self.frame_skip == self.frame_skip_counter):
+			self.batch_imgs.append(img_info["img"])
+			self.enqueued_frames += 1
+			self.frame_skip_counter = 0  # reset skip counter
+
+		else:
+			self.frame_skip_counter += 1
+
+		# when max_frames == 0 or (max_frames > 0 and total number of enqueued frames >= max_frames),
+		# close the pool and start the stitching pipeline
+		if self.max_frames == 0 or (self.max_frames != 0 and self.enqueued_frames == self.max_frames):
+			# Send this tuple of imgs into stitching
+			try:
+				if not self.stitching_svc.stitch(self.batch_imgs, self.enqueued_frames):
+					L.error("Stitching failed")
+			except Exception as e:
+				L.error("[ZENOH CONSUMER] Stitching pipiline failed. Reason: {}".format(e))
+
+			# Reset the value
 			self.batch_num = 0
 			self.batch_imgs = []
 			self.frame_skip_counter = 0
 			self.enqueued_frames = 0
 
-		# if enabled, perform the stitching processor
-		else:
-			# skip frames (if enabled)
-			# append current captured img data
-			if self.batch_num == 1 or (0 < self.frame_skip == self.frame_skip_counter):
-				self.batch_imgs.append(img_info["img"])
-				self.enqueued_frames += 1
-				self.frame_skip_counter = 0  # reset skip counter
-
-			# if self.frame_skip > 0 and self.frame_skip_counter < self.frame_skip:
-			else:
-				self.frame_skip_counter += 1
-
-			# when max_frames == 0 or (max_frames > 0 and total number of enqueued frames >= max_frames),
-			# close the pool and start the stitching pipeline
-			if self.max_frames == 0 or (self.max_frames != 0 and self.enqueued_frames == self.max_frames):
-				# Send this tuple of imgs into stitching
-				try:
-					if not self.stitching_svc.stitch(self.batch_imgs, self.enqueued_frames):
-						L.error("Stitching failed")
-				except Exception as e:
-					L.error("[ZENOH CONSUMER] Stitching pipiline failed. Reason: {}".format(e))
-
-				# Reset the value
-				self.batch_num = 0
-				self.batch_imgs = []
-				self.frame_skip_counter = 0
-				self.enqueued_frames = 0
-
-				# Force stop the stitching processor
-				self._processor_status = False
-
-	def __exec_stitching_in_full_mode(self, img_info):
-		# check stitching processor status
-		# if disabled (false), simply do nothing and make sure to empty any related variables
-		if not self._processor_status:
-			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
-			# Always empty any related variables
-			self.batch_num = 0
-			self.batch_imgs = []
-
-		# if enabled, perform the stitching processor
-		else:
-			# append current captured img data
-			self.batch_imgs.append(img_info["img"])
-
-			# when N number of images has been collected, send the tuple of images into stitching service
-			if self.batch_num == self.target_stitch:
-				# Send this tuple of imgs into stitching
-				try:
-					if not self.stitching_svc.stitch(self.batch_imgs, self.batch_num):
-						L.error("Stitching failed")
-				except Exception as e:
-					L.error("[ZENOH CONSUMER] Stitching pipiline failed. Reason: {}".format(e))
-
-				# Reset the value
-				self.batch_num = 0
-				self.batch_imgs = []
+			# Force stop the stitching processor
+			self._processor_status = False
 
 	def img_listener(self, consumed_data):
 		self.batch_num += 1
@@ -240,14 +228,22 @@ class ImageSubscriberService(asab.Service):
 		################################
 
 		# Check Stitching mode
-		# Batch mode
-		# It will enqueue up to `target_stitch` frames and do stitching each
-		if self._stitching_mode == self.StitchingMode.BATCH:
+		# if disabled (false), simply do nothing and make sure to empty any related variables
+		if not self._processor_status:
+			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
+			# Always empty any related variables
+			self.batch_num = 0
+			self.batch_imgs = []
+			self.frame_skip_counter = 0
+			self.enqueued_frames = 0
+		if self._processor_status and self._stitching_mode == StitchingMode.BATCH.value:
+			# Batch mode
+			# It will enqueue up to `target_stitch` frames and do stitching each
 			self.__exec_stitching_in_batch_mode(img_info)
 
-		# Full mode
-		# It will enqueue all captured images (except skipped frames and/or hard limited) and do stitching only ONCE
-		elif self._stitching_mode == self.StitchingMode.FULL:
+			# Full mode
+			# It will enqueue all captured images (except skipped frames and/or hard limited) and do stitching only ONCE
+		elif self._processor_status and self._stitching_mode == StitchingMode.FULL.value:
 			self.__exec_stitching_in_full_mode(img_info)
 
 	def _start_zenoh(self):

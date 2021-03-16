@@ -25,6 +25,7 @@ class StitchingAPIService(asab.Service):
 		REQUEST_TIMEOUT = "REQUEST TIMEOUT"
 		BAD_REQUEST = "BAD REQUEST"
 		INVALID_TRIGGER_ACTION = "INVALID TRIGGER ACTION"
+		INVALID_CONFIGURABLE_VARS = "INVALID CONFIGURABLE VARS"
 
 	class TriggerType(object):
 		START = "start"
@@ -154,7 +155,9 @@ class StitchingAPIService(asab.Service):
 		# by publishing an action and will be captured by Stitching Manager Subscriber
 		self.App.PubSub.publish(
 			"eaglestitch.StitchingManagerPubSub.message!",
-			enable_processor=_enable_processor,
+			config={
+				"processor_status": _enable_processor
+			},
 			asynchronously=True,
 		)
 
@@ -162,3 +165,20 @@ class StitchingAPIService(asab.Service):
 		_msg = "EagleStitch System has been notified with `{}` action!".format(action.upper())
 
 		return _status, _msg
+
+	async def update_config(self, configurable_vars):
+		# initialize default response
+		_status, _msg, data = 200, None, None
+
+		print(configurable_vars)
+
+		self.App.PubSub.publish(
+			"eaglestitch.StitchingManagerPubSub.message!",
+			config=configurable_vars,
+			asynchronously=True,
+		)
+
+		# generate message to response the request
+		_msg = "Updating configs succeed."
+
+		return _status, _msg, configurable_vars
