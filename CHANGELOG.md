@@ -1,3 +1,13 @@
+## 0.5.0 (March 18, 2021)
+  - Merge branch 'bugfix/stop-not-working-in-mode-2' into develop
+  - code refactor
+  - enrich information with `action_mode`
+  - add processing latency for stitching pipeline
+  - code refactor; bugfix: unable to read stop action properly
+  - add different input files
+  - add `ActionMode` class; code refactor
+  - Merge branch 'release/0.4' into develop
+
 ## 0.4.0 (March 17, 2021)
   - Merge branch 'feature/live-config-update' into develop
   - bugfix: wrong stitching mode implementation; code refactor
