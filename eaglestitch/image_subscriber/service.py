@@ -5,7 +5,7 @@ import numpy as np
 from datetime import datetime
 from eaglestitch.image_subscriber.zenoh_pubsub.zenoh_net_subscriber import ZenohNetSubscriber
 import logging
-from configurable_vars.configurable_vars import ConfigurableVars, StitchingMode
+from configurable_vars.configurable_vars import ConfigurableVars, StitchingMode, ActionMode
 from concurrent.futures import ThreadPoolExecutor
 
 ###
@@ -42,11 +42,12 @@ class ImageSubscriberService(asab.Service):
 		# config for Stitching mode = 1 (BATCH)
 		self.target_stitch = asab.Config["stitching:config"].getint("target_stitch")
 
-		# config for Stitching mode = 1 (FULL)
+		# config for Stitching mode = 2 (FULL)
 		self.frame_skip = asab.Config["stitching:config"].getint("frame_skip")
 		self.max_frames = asab.Config["stitching:config"].getint("max_frames")
 		self.frame_skip_counter = 0
 		self.enqueued_frames = 0
+		self.forced_stop = False
 
 		self.batch_num = 0  # we will reset this value once finished sending tuple of imgs into stitching service
 		self.batch_imgs = []  # we will reset this value once finished sending tuple of imgs into stitching service
@@ -99,6 +100,10 @@ class ImageSubscriberService(asab.Service):
 		if not self._processor_status and ConfigurableVars.MAX_FRAMES.value in config:
 			self.max_frames = config[ConfigurableVars.MAX_FRAMES.value]
 
+		# Check if user requests to stop the stitching through an API
+		if config["action_mode"] == ActionMode.START_STOP:
+			self.forced_stop = config["forced_stop"]
+
 		# check each configurable vars
 		if ConfigurableVars.PROCESSOR_STATUS.value in config:
 			self._processor_status = config[ConfigurableVars.PROCESSOR_STATUS.value]
@@ -128,7 +133,7 @@ class ImageSubscriberService(asab.Service):
 	async def _validate_stitching_mode(self):
 		_valid_mode = frozenset([
 			StitchingMode.BATCH.value,
-			StitchingMode.FULL.value
+			StitchingMode.STREAM.value
 		])
 		if self._stitching_mode not in _valid_mode:
 			_err_msg = ">>>>> Invalid Stitching mode; Available mode: `1` (BATCH; default) and `2` (FULL)"
@@ -160,19 +165,21 @@ class ImageSubscriberService(asab.Service):
 			self.batch_imgs = []
 
 	def __exec_stitching_in_full_mode(self, img_info):
-		# skip frames (if enabled)
-		# append current captured img data
-		if self.batch_num == 1 or (0 < self.frame_skip == self.frame_skip_counter):
-			self.batch_imgs.append(img_info["img"])
-			self.enqueued_frames += 1
-			self.frame_skip_counter = 0  # reset skip counter
+		# Ignore this process if this function is called due to it a STOP action!
+		if not self.forced_stop:
+			# skip frames (if enabled)
+			# append current captured img data
+			if self.batch_num == 1 or (0 < self.frame_skip == self.frame_skip_counter):
+				self.batch_imgs.append(img_info["img"])
+				self.enqueued_frames += 1
+				self.frame_skip_counter = 0  # reset skip counter
 
-		else:
-			self.frame_skip_counter += 1
+			else:
+				self.frame_skip_counter += 1
 
-		# when max_frames == 0 or (max_frames > 0 and total number of enqueued frames >= max_frames),
 		# close the pool and start the stitching pipeline
-		if self.max_frames == 0 or (self.max_frames != 0 and self.enqueued_frames == self.max_frames):
+		if (self.max_frames == 0 and self.forced_stop) or \
+				(self.max_frames != 0 and self.enqueued_frames == self.max_frames):
 			# Send this tuple of imgs into stitching
 			try:
 				if not self.stitching_svc.stitch(self.batch_imgs, self.enqueued_frames):
@@ -185,6 +192,7 @@ class ImageSubscriberService(asab.Service):
 			self.batch_imgs = []
 			self.frame_skip_counter = 0
 			self.enqueued_frames = 0
+			self.forced_stop = False
 
 			# Force stop the stitching processor
 			self._processor_status = False
@@ -229,7 +237,7 @@ class ImageSubscriberService(asab.Service):
 
 		# Check Stitching mode
 		# if disabled (false), simply do nothing and make sure to empty any related variables
-		if not self._processor_status:
+		if not self._processor_status and not self.forced_stop:
 			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
 			# Always empty any related variables
 			self.batch_num = 0
@@ -241,9 +249,13 @@ class ImageSubscriberService(asab.Service):
 			# It will enqueue up to `target_stitch` frames and do stitching each
 			self.__exec_stitching_in_batch_mode(img_info)
 
+		elif self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
 			# Full mode
 			# It will enqueue all captured images (except skipped frames and/or hard limited) and do stitching only ONCE
-		elif self._processor_status and self._stitching_mode == StitchingMode.FULL.value:
+			self.__exec_stitching_in_full_mode(img_info)
+
+		# Finalize and start the stitching pipeline
+		elif not self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
 			self.__exec_stitching_in_full_mode(img_info)
 
 	def _start_zenoh(self):
