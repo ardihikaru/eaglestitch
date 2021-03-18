@@ -5,6 +5,7 @@ import logging
 from asab.log import LOG_NOTICE
 from eaglestitch.image_subscriber.zenoh_pubsub.zenoh_net_publisher import ZenohNetPublisher
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 import time
 
 ###
@@ -87,8 +88,21 @@ class StitchingService(asab.Service):
 
 	def _stitch_imgs(self, imgs, batch_num):
 		try:
+			t0_stitching = time.time()
 			sticher = Stitch(imgs, batch_num, self.config)
 			sticher.run()
+
+			# in ms
+			# t1_stitching = (time.time() - t0_stitching) * 1000  # in ms
+			# L.warning(
+			# 	('\n[LATENCY][%s] Latency img_info (%.3f ms) \n' % (
+			# 		datetime.now().strftime("%H:%M:%S"), t1_stitching)))
+
+			# in seconds
+			t1_stitching = (time.time() - t0_stitching)  # in seconds
+			L.warning(
+				('\n[LATENCY][%s] Latency img_info (%.2f secs) \n' % (
+					datetime.now().strftime("%H:%M:%S"), t1_stitching)))
 
 			return True, sticher.get_stitch_result(), sticher.get_stored_input_imgs()
 		except Exception as e:

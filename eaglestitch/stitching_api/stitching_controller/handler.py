@@ -59,7 +59,7 @@ class StitchingControllerSectionWebHandler(object):
 				L.error(_err_msg)
 				return _err_msg
 
-			_valid_stitching_mode = frozenset([StitchingMode.BATCH.value, StitchingMode.FULL.value])
+			_valid_stitching_mode = frozenset([StitchingMode.BATCH.value, StitchingMode.STREAM.value])
 			if req_key == ConfigurableVars.STITCHING_MODE.value and not isinstance(request_json[req_key], int):
 				_err_msg = "Var `{}` should be an Integer.".format(req_key)
 				L.error(_err_msg)

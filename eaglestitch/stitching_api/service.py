@@ -1,4 +1,5 @@
 import asab
+from configurable_vars.configurable_vars import ActionMode
 import logging
 
 ###
@@ -151,12 +152,17 @@ class StitchingAPIService(asab.Service):
 		# get processor's action to do
 		_enable_processor = True if action == self.TriggerType.START else False
 
+		# get stop trigger
+		_forced_stop = True if not _enable_processor else False
+
 		# control stitching action based on the user request
 		# by publishing an action and will be captured by Stitching Manager Subscriber
 		self.App.PubSub.publish(
 			"eaglestitch.StitchingManagerPubSub.message!",
 			config={
-				"processor_status": _enable_processor
+				"action_mode": ActionMode.START_STOP,
+				"processor_status": _enable_processor,
+				"forced_stop": _forced_stop,
 			},
 			asynchronously=True,
 		)
@@ -170,7 +176,8 @@ class StitchingAPIService(asab.Service):
 		# initialize default response
 		_status, _msg, data = 200, None, None
 
-		print(configurable_vars)
+		# Enrich with action mode information
+		configurable_vars["action_mode"] = ActionMode.LIVE_CONFIG_UPDATE
 
 		self.App.PubSub.publish(
 			"eaglestitch.StitchingManagerPubSub.message!",

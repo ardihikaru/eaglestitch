@@ -11,4 +11,9 @@ class ConfigurableVars(Enum):
 
 class StitchingMode(Enum):
 	BATCH = 1
-	FULL = 2
+	STREAM = 2
+
+
+class ActionMode(object):
+	START_STOP = "START_STOP"
+	LIVE_CONFIG_UPDATE = "LIVE_CONFIG_UPDATE"
