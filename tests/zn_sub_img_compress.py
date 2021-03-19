@@ -67,12 +67,75 @@ selector = args.selector
 # def listener(sample):
 def listener(consumed_data):
     print(" #### LISTENER ..")
-    t1 = time.time()
-    deserialized_bytes = np.frombuffer(consumed_data.payload, dtype=np.int8)
-    decimg = cv2.imdecode(deserialized_bytes, 1)  # decompress
-    t2 = time.time() - t1
-    print(" ### SHAPE decimg:", decimg.shape)
-    print('\nLatency Decode: (%.2f ms)' % (t2 * 1000))
+
+    t0_decode = time.time()
+    decoded_data = np.frombuffer(consumed_data.payload, dtype=np.int64)
+    # decoded_data = np.frombuffer(encoded_data, dtype=np.uint64)
+    # print(decoded_data)
+    t1_decode = (time.time() - t0_decode) * 1000
+    print(('\n[%s] Latency DECODING (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decode)))
+
+    t0_decode_img = time.time()
+    decoded_img = decoded_data[:-1].copy().astype('uint8')
+    t1_decode_img = (time.time() - t0_decode_img) * 1000
+    print(('\n[%s] Latency GET DECODED IMG (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decode_img)))
+
+    t0_decompress_img = time.time()
+    # print(" ### SHAPE: decoded_img = ", decoded_img.shape)
+    deimg_len = list(decoded_img.shape)[0]
+    # print(" ----- deimg_len:", deimg_len)
+    decoded_img = decoded_img.reshape(deimg_len, 1)
+    # print(" ### SHAPE: decoded_img = ", decoded_img.shape, type(decoded_img), type(decoded_img[0][0]))
+    decompressed_img = cv2.imdecode(decoded_img, 1)  # decompress
+    t1_decompress_img = (time.time() - t0_decompress_img) * 1000
+    print(('\n[%s] Latency DECOMPRESS IMG (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decompress_img)))
+
+    # ############
+    # ############ For IMAGE ONLY
+    # t0_decoding = time.time()
+    # deserialized_bytes = np.frombuffer(consumed_data.payload, dtype=np.int8)
+    # print(" === SHAPE deserialized_bytes:", deserialized_bytes.shape)
+    # print(deserialized_bytes)
+    # t1_decoding = (time.time() - t0_decoding) * 1000
+    # print(
+    #     ('\n[%s] Latency load ONLY numpy image (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+    #
+    # # t0_decoding = time.time()
+    # # deserialized_img = np.reshape(deserialized_bytes, newshape=(1080, 1920, 3))
+    # # print(">>> img_ori SHAPE:", deserialized_img.shape)
+    # # t1_decoding = (time.time() - t0_decoding) * 1000
+    # # print(
+    # #     ('\n[%s] Latency reformat image (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+    # ############ END For IMAGE ONLY
+    ############
+
+    # deserialized_bytes = np.frombuffer(consumed_data.payload, dtype=np.int8)
+    # print(" #### deserialized_bytes TYPE:", type(deserialized_bytes), len(deserialized_bytes))
+    # print(" - SHAPE: ", deserialized_bytes.shape)
+
+    # decoded_data = consumed_data.payload.decode("utf-8")
+    # print(" #### decoded_data TYPE:", type(decoded_data), len(decoded_data))
+    # split_data = decoded_data.split(" ")
+    # drone_id = split_data[0]
+    # t0_data = split_data[1]
+    # bytes_img = bytes(split_data[2], encoding='utf8')
+    # print(" ### drone_id:", drone_id)
+    # print(" ### t0_data:", t0_data)
+    # print(" ### bytes_img TYPE:", type(bytes_img), len(bytes_img))
+    # # print(decoded_data)
+    #
+    # print()
+    #
+    # t1 = time.time()
+    # deserialized_bytes = np.frombuffer(bytes_img, dtype=np.int8)
+    # print(type(deserialized_bytes))
+    # print(" SHAPE deserialized_bytes:", deserialized_bytes.shape)
+    # decimg = cv2.imdecode(deserialized_bytes, 1)  # decompress
+    # t2 = time.time() - t1
+    # print(" ### SHAPE decimg:", decimg.shape)
+    # print('\nLatency Decode: (%.2f ms)' % (t2 * 1000))
+
+    # exit()
 
     # ############
     # ############ For IMAGE ONLY
