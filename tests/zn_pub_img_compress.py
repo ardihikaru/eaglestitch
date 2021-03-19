@@ -26,7 +26,9 @@ from datetime import datetime
 import numpy as np
 
 # Encoding parameter
-encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]  # The default value for IMWRITE_JPEG_QUALITY is 95
+# The default value for IMWRITE_JPEG_QUALITY is 95
+# Source: https://stackoverflow.com/questions/40768621/python-opencv-jpeg-compression-in-memory
+encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]
 
 # --- Command line argument parsing --- --- --- --- --- ---
 parser = argparse.ArgumentParser(
