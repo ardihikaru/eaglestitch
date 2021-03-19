@@ -94,11 +94,14 @@ while cap.isOpened():
 	try:
 		ret, frame = cap.read()
 
+		t0_decoding = time.time()
 		# resize the frame; Default VGA (640 x 480)
 		frame = cv2.resize(frame, (1920, 1080))
 
 		img_1d = frame.reshape(1, -1)
 		val = [('Drone 1', time.time(), img_1d, False)]
+		t1_decoding = (time.time() - t0_decoding) * 1000
+		print(('\n[%s] Latency tagging (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
 
 		# publish in every 10 frames
 		if ret and _frame_id % 10 == 0:
