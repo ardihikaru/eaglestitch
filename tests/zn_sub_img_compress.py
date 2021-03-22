@@ -171,6 +171,7 @@ def listener(consumed_data):
 	print(('[%s] Latency DE-COMPRESSING IMG (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_decompress_img)))
 
 	# cv2.imwrite("decompressed_img.jpg", decompressed_img)
+	cv2.imwrite("decompressed_img_{}.jpg".format(str(t0_decompress_img)), decompressed_img)
 
 # t0_decode_img = time.time()
 	# decoded_img = decoded_data[:-1].copy().astype('uint8')
