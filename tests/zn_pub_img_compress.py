@@ -110,30 +110,70 @@ print(" ##### imgencode[img_len-1][0] = ", imgencode[img_len-1][0])
 # imgencode.append(1)
 
 t0 = str(time.time())
+t0_array = t0.split(".")
+print(" --- t0_array:", t0_array)
 bytes_t0 = b"kucing"
 time_buf = np.frombuffer(bytes_t0, dtype=np.uint8)
 print(" %%%% time_buf:", time_buf)
 
-print()
-# mystring = "Welcome to the InterStar cafe, serving you since 2412!"
-mystring = t0
-mybytes = mystring.encode('utf-8')
-myint = int.from_bytes(mybytes, 'little')  # byteorder must be either 'little' or 'big'
-print(" ~~~~ myint:", myint)
-recoveredbytes = myint.to_bytes((myint.bit_length() + 7) // 8, 'little')  # byteorder must be either 'little' or 'big'
-recoveredstring = recoveredbytes.decode('utf-8')
-print(" ~~~~ recoveredstring:", recoveredstring)
-print()
 
-print(" @@@@@@@ t0 =", t0)
+def encrypt_str(str_val, byteorder="little"):
+	encrypted_bytes = str_val.encode('utf-8')
+	encrypted_val = int.from_bytes(encrypted_bytes, byteorder)  # `byteorder` must be either 'little' or 'big'
+	return encrypted_val
+
+
+def decrypt_str(int_val, byteorder="little"):
+	decrypted_bytes = int_val.to_bytes((int_val.bit_length() + 7) // 8, byteorder)  # byteorder must be either 'little' or 'big'
+	decrypted_str = decrypted_bytes.decode('utf-8')
+	return decrypted_str
+
+
+print()
+# Generate int-based drone ID
+# int_drone_id = encrypt_str("D01")
+int_drone_id = encrypt_str("Drone 01")
+int_t0 = encrypt_str(str(time.time()))
+print(" ## int_drone_id:", int_drone_id, type(int_drone_id))
+print(" ## int_t0:", int_t0)
+extra_len = 3
+str_drone_id = decrypt_str(int_drone_id)
+print(" ## str_drone_id:", str_drone_id, type(str_drone_id))
+
+tagged_data_len = img_len + extra_len + 1
+
+# Generate int-based timestamp
+
+# mystring = "Welcome to the InterStar cafe, serving you since 2412!"
+# mystring = t0
+# mybytes = mystring.encode('utf-8')
+# myint = int.from_bytes(mybytes, 'little')  # byteorder must be either 'little' or 'big'
+# print(" ~~~~ myint:", myint)
+# recoveredbytes = myint.to_bytes((myint.bit_length() + 7) // 8, 'little')  # byteorder must be either 'little' or 'big'
+# recoveredstring = recoveredbytes.decode('utf-8')
+# print(" ~~~~ recoveredstring:", recoveredstring)
+# print()
+
+# print(" @@@@@@@ t0 =", t0)
 # newrow = [[2]]
 # newrow = [[myint]]
 # newrow = [[12345677854353445366]]  # max 20 digit
-newrow = [[1234567785435345555]]  # max 19 digit
+# newrow = [[1234567785435345555]]  # max 19 digit
+# newrow = [[int_t0]]  # max 19 digit
+newrow = [
+	[int_drone_id],
+	[int(t0_array[0])],
+	[int(t0_array[1])],
+	[extra_len],
+	[tagged_data_len],
+]  # max 19 digit
+print(" ----- OLD SHAPE imgencode:", imgencode.shape)
 imgencode = np.vstack([imgencode, newrow])
 print(" ##### imgencode[img_len][0] = ", imgencode[img_len][0])
-sub_arr = imgencode[:-1].copy()
-print(" ----- NEW TYPE(sub_arr)", type(sub_arr), sub_arr.shape)
+# sub_arr = imgencode[:-1].copy()
+# print(" ----- NEW TYPE(sub_arr)", type(sub_arr), sub_arr.shape)
+
+print(" ----- NEW SHAPE imgencode:", imgencode.shape)
 
 # print(" ##### imgencode[0][1] = ", imgencode[0][1])  # ERROR PASTI
 # imgencode = np.vstack((imgencode, [[2][2]]))
@@ -172,7 +212,7 @@ print(('\n[%s] Latency encoding to bytes (%.3f ms) \n' % (datetime.now().strftim
 t0_decode = time.time()
 decoded_data = np.frombuffer(encoded_data, dtype=np.int64)
 # decoded_data = np.frombuffer(encoded_data, dtype=np.uint64)
-print(decoded_data)
+# print(decoded_data)
 t1_decode = (time.time() - t0_decode) * 1000
 print(('\n[%s] Latency DECODING (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decode)))
 
@@ -184,7 +224,7 @@ print(('\n[%s] Latency GET DECODED IMG (%.3f ms) \n' % (datetime.now().strftime(
 t0_decompress_img = time.time()
 # print(" ### SHAPE: decoded_img = ", decoded_img.shape)
 deimg_len = list(decoded_img.shape)[0]
-# print(" ----- deimg_len:", deimg_len)
+print(" ----- deimg_len:", deimg_len)
 decoded_img = decoded_img.reshape(deimg_len, 1)
 # print(" ### SHAPE: decoded_img = ", decoded_img.shape, type(decoded_img), type(decoded_img[0][0]))
 decompressed_img = cv2.imdecode(decoded_img, 1)  # decompress
@@ -237,6 +277,7 @@ print(('\n[%s] Latency DECOMPRESS IMG (%.3f ms) \n' % (datetime.now().strftime("
 #
 for idx in itertools.count():
 	# time.sleep(0.33)
+	time.sleep(1.33)
 	# buf = "[{:4d}] {}".format(idx, value)
 	# buf = "[{:4d}] {}".format(idx, stringData)
 	# print(" --- sending Bytes image..")
