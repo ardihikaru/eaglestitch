@@ -9,6 +9,9 @@ import simplejson as json
 from enum import Enum
 import logging
 
+# Enable / disable cvout
+_enable_cv_out = False
+
 # Encoding parameter
 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]  # The default value for IMWRITE_JPEG_QUALITY is 95
 
@@ -94,9 +97,10 @@ window_title = "output-raw"
 # cap = cv2.VideoCapture(0)
 # cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/0312_2_CUT.mp4")
 cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
-cv2.namedWindow(window_title, cv2.WND_PROP_FULLSCREEN)
-# cv2.resizeWindow("Image", 1920, 1080)  # Enter your size
-cv2.resizeWindow(window_title, 800, 550)  # Enter your size
+if _enable_cv_out:
+	cv2.namedWindow(window_title, cv2.WND_PROP_FULLSCREEN)
+	# cv2.resizeWindow("Image", 1920, 1080)  # Enter your size
+	cv2.resizeWindow(window_title, 800, 550)  # Enter your size
 _frame_id = 0
 
 _wt, _ht = 1080, 1920  # target width and height
@@ -178,17 +182,21 @@ while cap.isOpened():
 
 		# time.sleep(1)
 
-		cv2.imshow(window_title, frame)
+		if _enable_cv_out:
+			cv2.imshow(window_title, frame)
 		print()
 	except Exception as e:
 		print("No more frame to show: `{}`".format(e))
 		break
 
-	if cv2.waitKey(1) & 0xFF == ord('q'):
-		break
-# The following frees up resources and closes all windows
-cap.release()
-cv2.destroyAllWindows()
+	if _enable_cv_out:
+		if cv2.waitKey(1) & 0xFF == ord('q'):
+			break
+
+if _enable_cv_out:
+	# The following frees up resources and closes all windows
+	cap.release()
+	cv2.destroyAllWindows()
 #########################
 
 # n_epoch = 5  # total number of publication processes
