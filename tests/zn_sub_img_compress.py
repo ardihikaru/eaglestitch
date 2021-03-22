@@ -107,9 +107,9 @@ def listener(consumed_data):
 	decoded_data = decoded_data.reshape(decoded_data_len, 1)
 	array_len = decoded_data[-1][0]
 	extra_tag_len = decoded_data[-2][0]
-	num_deleted_elements = extra_tag_len + 2
-	# encoded_img_len = array_len - extra_tag_len
-	encoded_img_len = array_len - num_deleted_elements
+	encoded_img_len = array_len - extra_tag_len
+	# print(" ----- decoded_data_len:", decoded_data_len)
+	# print(" ----- array_len:", array_len)
 	# print(" ----- extra_tag_len:", extra_tag_len)
 	# print(" ----- encoded_img_len:", encoded_img_len)
 	# print(" ----- SHAPE decoded_data:", decoded_data.shape)
@@ -141,7 +141,7 @@ def listener(consumed_data):
 	# popping tagged information
 	t0_non_img_cleaning = time.time()
 	# print(" ----- OLD SHAPE decoded_data:", decoded_data.shape)
-	for i in range(num_deleted_elements):
+	for i in range(extra_tag_len):
 		decoded_data = np.delete(decoded_data, -1)
 	decoded_data = decoded_data.reshape(decoded_data_len-5, 1)
 	# print(" ----- NEWWWW SHAPE decoded_data:", decoded_data.shape)

@@ -136,11 +136,11 @@ int_drone_id = encrypt_str("Drone 01")
 int_t0 = encrypt_str(str(time.time()))
 print(" ## int_drone_id:", int_drone_id, type(int_drone_id))
 print(" ## int_t0:", int_t0)
-extra_len = 3
+extra_len = 5
 str_drone_id = decrypt_str(int_drone_id)
 print(" ## str_drone_id:", str_drone_id, type(str_drone_id))
 
-tagged_data_len = img_len + extra_len + 1
+tagged_data_len = img_len + extra_len
 
 # Generate int-based timestamp
 
