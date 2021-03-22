@@ -43,7 +43,8 @@ parser.add_argument('--listener', '-l', dest='listener',
 					type=str,
 					help='Locators to listen on.')
 parser.add_argument('--selector', '-s', dest='selector',
-					default='/demo/example/**',
+					# default='/demo/example/**',
+					default='/eaglestitch/svc/**',
 					type=str,
 					help='The selection of resources to subscribe.')
 parser.add_argument('--config', '-c', dest='config',
@@ -71,7 +72,9 @@ def decrypt_str(int_val, byteorder="little"):
 
 
 def extract_drone_id(data, img_len):
-	drone_idx = img_len + 1
+	print(" ### img_len:", img_len)
+	drone_idx = img_len
+	print(" ### data:", data[drone_idx][0])
 	return decrypt_str(int(data[drone_idx][0]))
 
 
@@ -122,12 +125,12 @@ def listener(consumed_data):
 	print(('[%s] Latency DECODING Payload (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_decode)))
 
 	# test printing
-	# print(" ##### decoded_data[-1][0] = ", decoded_data[-1][0])  # tagged_data_len
-	# print(" ##### decoded_data[-2][0] = ", decoded_data[-2][0])  # total_number_of_tag
-	# print(" ##### decoded_data[-3][0] = ", decoded_data[-3][0])  # t0_part_2
-	# print(" ##### decoded_data[-4][0] = ", decoded_data[-4][0])  # t0_part_1
-	# print(" ##### decoded_data[-5][0] = ", decoded_data[-5][0])  # drone_id
-	# print(" ##### decoded_data[-6][0] = ", decoded_data[-6][0])  # img_data
+	# print(" ##### decoded_data[-1][0] (tagged_data_len) = ", decoded_data[-1][0])  # tagged_data_len
+	# print(" ##### decoded_data[-2][0] (total_number_of_tag) = ", decoded_data[-2][0])  # total_number_of_tag
+	# print(" ##### decoded_data[-3][0] (t0_part_2) = ", decoded_data[-3][0])  # t0_part_2
+	# print(" ##### decoded_data[-4][0] (t0_part_1) = ", decoded_data[-4][0])  # t0_part_1
+	# print(" ##### decoded_data[-5][0] (drone_id) = ", decoded_data[-5][0])  # drone_id
+	# print(" ##### decoded_data[-6][0] (img_data) = ", decoded_data[-6][0])  # img_data
 
 	# Extract information
 	t0_tag_extraction = time.time()

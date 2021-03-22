@@ -49,7 +49,8 @@ parser.add_argument('--listener', '-l', dest='listener',
 					type=str,
 					help='Locators to listen on.')
 parser.add_argument('--path', '-p', dest='path',
-					default='/demo/example/zenoh-python-pub',
+					# default='/demo/example/zenoh-python-pub',
+					default='/eaglestitch/svc/zenoh-python-pub',
 					type=str,
 					help='The name of the resource to publish.')
 parser.add_argument('--value', '-v', dest='value',
@@ -72,6 +73,10 @@ if args.listener is not None:
 path = args.path
 value = args.value
 
+print(" ### conf:", conf)
+print(" ### path:", path)
+print(" ### value:", value)
+
 # zenoh-net code  --- --- --- --- --- --- --- --- --- --- ---
 
 # initiate logging
@@ -89,32 +94,32 @@ publisher = session.declare_publisher(rid)
 
 root_path = "./../data/out1.png"
 frame = cv2.imread(root_path)
-print("SHAPE: ", frame.shape)
+# print("SHAPE: ", frame.shape)
 
 t0_compress_img = time.time()
 # t0_decoding = time.time()
 result, imgencode = cv2.imencode('.jpg', frame, encode_param)
 img_len, _ = imgencode.shape
 t1_compress_img = (time.time() - t0_compress_img) * 1000
-print(('\n[%s] Latency COMPRESS IMG (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_compress_img)))
+print(('[%s] Latency COMPRESS IMG (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_compress_img)))
 
 ori_imgencode = imgencode.copy()
 
-print(" ----- TYPE(imgencode)", type(imgencode), imgencode.shape)
-print(" ##### imgencode[0][0] = ", imgencode[0][0])
-print(" ##### imgencode[1][0] = ", imgencode[1][0])
-print(" ##### imgencode[2][0] = ", imgencode[2][0])
-print(" ##### imgencode[-1][0] = ", imgencode[-1][0])
-print(" ##### imgencode[img_len-1][0] = ", imgencode[img_len-1][0])
+# print(" ----- TYPE(imgencode)", type(imgencode), imgencode.shape)
+# print(" ##### imgencode[0][0] = ", imgencode[0][0])
+# print(" ##### imgencode[1][0] = ", imgencode[1][0])
+# print(" ##### imgencode[2][0] = ", imgencode[2][0])
+# print(" ##### imgencode[-1][0] = ", imgencode[-1][0])
+# print(" ##### imgencode[img_len-1][0] = ", imgencode[img_len-1][0])
 # imgencode[img_len][0] = 1234
 # imgencode.append(1)
 
 t0 = str(time.time())
 t0_array = t0.split(".")
-print(" --- t0_array:", t0_array)
-bytes_t0 = b"kucing"
-time_buf = np.frombuffer(bytes_t0, dtype=np.uint8)
-print(" %%%% time_buf:", time_buf)
+# print(" --- t0_array:", t0_array)
+# bytes_t0 = b"kucing"
+# time_buf = np.frombuffer(bytes_t0, dtype=np.uint8)
+# print(" %%%% time_buf:", time_buf)
 
 
 def encrypt_str(str_val, byteorder="little"):
@@ -133,12 +138,12 @@ print()
 # Generate int-based drone ID
 # int_drone_id = encrypt_str("D01")
 int_drone_id = encrypt_str("Drone 01")
-int_t0 = encrypt_str(str(time.time()))
+# int_t0 = encrypt_str(str(time.time()))
 print(" ## int_drone_id:", int_drone_id, type(int_drone_id))
-print(" ## int_t0:", int_t0)
+# print(" ## int_t0:", int_t0)
 extra_len = 5
-str_drone_id = decrypt_str(int_drone_id)
-print(" ## str_drone_id:", str_drone_id, type(str_drone_id))
+# str_drone_id = decrypt_str(int_drone_id)
+# print(" ## str_drone_id:", str_drone_id, type(str_drone_id))
 
 tagged_data_len = img_len + extra_len
 
@@ -167,24 +172,24 @@ newrow = [
 	[extra_len],
 	[tagged_data_len],
 ]  # max 19 digit
-print(" ----- OLD SHAPE imgencode:", imgencode.shape)
+# print(" ----- OLD SHAPE imgencode:", imgencode.shape)
 imgencode = np.vstack([imgencode, newrow])
-print(" ##### imgencode[img_len][0] = ", imgencode[img_len][0])
+# print(" ##### imgencode[img_len][0] = ", imgencode[img_len][0])
 # sub_arr = imgencode[:-1].copy()
 # print(" ----- NEW TYPE(sub_arr)", type(sub_arr), sub_arr.shape)
 
-print(" ----- NEW SHAPE imgencode:", imgencode.shape)
+# print(" ----- NEW SHAPE imgencode:", imgencode.shape)
 
 # print(" ##### imgencode[0][1] = ", imgencode[0][1])  # ERROR PASTI
 # imgencode = np.vstack((imgencode, [[2][2]]))
 # coba = [[2], [2], [2]]
 # coba = np.asarray(coba)
 # coba2 = imgencode + coba
-print("###### img_len:", img_len)
+# print("###### img_len:", img_len)
 # imgencode[2][0]
 # coba = np.append(11111111111111112224444, imgencode)
 # print(" ----- SHAPE coba:", coba.shape, coba)
-print(" ----- NEW TYPE(imgencode)", type(imgencode), imgencode.shape)
+# print(" ----- NEW TYPE(imgencode)", type(imgencode), imgencode.shape)
 
 # # bytes_img = imgencode.tobytes()
 # bytes_img = sub_arr.tobytes()
@@ -205,7 +210,7 @@ t0_encoding = time.time()
 # encoded_data = tagged_data.tobytes()
 encoded_data = imgencode.tobytes()
 t1_encoding = (time.time() - t0_encoding) * 1000
-print(('\n[%s] Latency encoding to bytes (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_encoding)))
+print(('[%s] Latency encoding to bytes (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_encoding)))
 
 # arr = np.array([1, 2, 3, 4, 5, 6])
 # ts = sub_arr.tobytes()
@@ -214,22 +219,22 @@ decoded_data = np.frombuffer(encoded_data, dtype=np.int64)
 # decoded_data = np.frombuffer(encoded_data, dtype=np.uint64)
 # print(decoded_data)
 t1_decode = (time.time() - t0_decode) * 1000
-print(('\n[%s] Latency DECODING (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decode)))
+print(('[%s] Latency DECODING (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_decode)))
 
 t0_decode_img = time.time()
 decoded_img = decoded_data[:-1].copy().astype('uint8')
 t1_decode_img = (time.time() - t0_decode_img) * 1000
-print(('\n[%s] Latency GET DECODED IMG (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decode_img)))
+print(('[%s] Latency GET DECODED IMG (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_decode_img)))
 
 t0_decompress_img = time.time()
 # print(" ### SHAPE: decoded_img = ", decoded_img.shape)
 deimg_len = list(decoded_img.shape)[0]
-print(" ----- deimg_len:", deimg_len)
+# print(" ----- deimg_len:", deimg_len)
 decoded_img = decoded_img.reshape(deimg_len, 1)
 # print(" ### SHAPE: decoded_img = ", decoded_img.shape, type(decoded_img), type(decoded_img[0][0]))
 decompressed_img = cv2.imdecode(decoded_img, 1)  # decompress
 t1_decompress_img = (time.time() - t0_decompress_img) * 1000
-print(('\n[%s] Latency DECOMPRESS IMG (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decompress_img)))
+print(('[%s] Latency DECOMPRESS IMG (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_decompress_img)))
 
 # print(" ### SHAPE: ori_imgencode = ", ori_imgencode.shape, type(ori_imgencode), type(ori_imgencode[0][0]))
 # print(ori_imgencode)
