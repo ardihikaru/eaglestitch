@@ -227,7 +227,7 @@ class ImageSubscriberService(asab.Service):
 
 		t1_decoding = (time.time() - t0_decoding) * 1000
 		L.warning(
-			('\n[ZENOH CONSUMER][%s] Latency img_info (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+			('\n[ZENOH CONSUMER][%s] Latency img_info (%.3f ms) \n' % ("ZENOH CONSUMER", t1_decoding)))
 
 		t0_decoding = time.time()
 
@@ -256,13 +256,12 @@ class ImageSubscriberService(asab.Service):
 
 		t1_decoding = (time.time() - t0_decoding) * 1000
 		L.warning(
-			('\n[ZENOH CONSUMER][%s] Latency reformat image (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+			('\n[ZENOH CONSUMER][%s] Latency reformat image (%.3f ms) \n' % ("ZENOH CONSUMER", t1_decoding)))
 		###############################
 
 		return img_info
 
 	def _extract_compression_tagged_img(self, consumed_data):
-
 		"""
 		Expected data model:
 		[
@@ -274,7 +273,7 @@ class ImageSubscriberService(asab.Service):
 			[tagged_data_len],  # total array size: `img_data` + `total_number_of_tag` + 1
 		]
 		"""
-		print(" #### LISTENER ..")
+		# print(" #### LISTENER ..")
 
 		t0_decode = time.time()
 		decoded_data = np.frombuffer(consumed_data.payload, dtype=np.int64)
@@ -294,7 +293,7 @@ class ImageSubscriberService(asab.Service):
 		# print(" TAGGED DATA LEN:", decoded_data[:-1])
 		# print(decoded_data)
 		t1_decode = (time.time() - t0_decode) * 1000
-		print(('[%s] Latency DECODING Payload (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_decode)))
+		L.warning(('[%s] Latency DECODING Payload (%.3f ms) ' % ("ZENOH CONSUMER", t1_decode)))
 
 		# test printing
 		# print(" ##### decoded_data[-1][0] (tagged_data_len) = ", decoded_data[-1][0])  # tagged_data_len
@@ -311,7 +310,7 @@ class ImageSubscriberService(asab.Service):
 		# print(" ----- drone_id:", drone_id, type(drone_id))
 		# print(" ----- t0:", t0, type(t0))
 		t1_tag_extraction = (time.time() - t0_tag_extraction) * 1000
-		print(('[%s] Latency Tag Extraction (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_tag_extraction)))
+		L.warning(('[%s] Latency Tag Extraction (%.3f ms) ' % ("ZENOH CONSUMER", t1_tag_extraction)))
 
 		# popping tagged information
 		t0_non_img_cleaning = time.time()
@@ -322,14 +321,14 @@ class ImageSubscriberService(asab.Service):
 		# print(" ----- NEWWWW SHAPE decoded_data:", decoded_data.shape)
 		# print(" ##### decoded_data[-1][0] = ", decoded_data[-1][0])  # tagged_data_len
 		t1_non_img_cleaning = (time.time() - t0_non_img_cleaning) * 1000
-		print(
-			('[%s] Latency Non Image Cleaning (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_non_img_cleaning)))
+		L.warning(
+			('[%s] Latency Non Image Cleaning (%.3f ms) ' % ("ZENOH CONSUMER", t1_non_img_cleaning)))
 
 		# extracting (compressed) image information
 		t0_img_extraction = time.time()
 		extracted_cimg = decoded_data[:-1].copy().astype('uint8')
 		t1_img_extraction = (time.time() - t0_img_extraction) * 1000
-		print(('[%s] Latency Image Extraction (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_img_extraction)))
+		L.warning(('[%s] Latency Image Extraction (%.3f ms) ' % ("ZENOH CONSUMER", t1_img_extraction)))
 
 		# Image de-compression (restore back into FullHD)
 		t0_decompress_img = time.time()
@@ -341,7 +340,7 @@ class ImageSubscriberService(asab.Service):
 		decompressed_img = cv2.imdecode(decoded_img, 1)  # decompress
 		# print(" ----- SHAPE decompressed_img:", decompressed_img.shape)
 		t1_decompress_img = (time.time() - t0_decompress_img) * 1000
-		print(('[%s] Latency DE-COMPRESSING IMG (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_decompress_img)))
+		L.warning(('[%s] Latency DE-COMPRESSING IMG (%.3f ms) \n' % ("ZENOH CONSUMER", t1_decompress_img)))
 
 		# cv2.imwrite("decompressed_img.jpg", decompressed_img)
 		# cv2.imwrite("decompressed_img_{}.jpg".format(str(t0_decompress_img)), decompressed_img)
