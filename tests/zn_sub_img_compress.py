@@ -62,6 +62,11 @@ if args.listener is not None:
 	conf["listener"] = ",".join(args.listener)
 selector = args.selector
 
+print(" ### args:", args)
+print(" ### conf:", conf)
+print(" ### selector:", selector)
+print(" ### listener:", conf["listener"])
+
 # zenoh-net code  --- --- --- --- --- --- --- --- --- --- ---
 
 
@@ -72,9 +77,7 @@ def decrypt_str(int_val, byteorder="little"):
 
 
 def extract_drone_id(data, img_len):
-	print(" ### img_len:", img_len)
 	drone_idx = img_len
-	print(" ### data:", data[drone_idx][0])
 	return decrypt_str(int(data[drone_idx][0]))
 
 
@@ -171,7 +174,7 @@ def listener(consumed_data):
 	print(('[%s] Latency DE-COMPRESSING IMG (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_decompress_img)))
 
 	# cv2.imwrite("decompressed_img.jpg", decompressed_img)
-	cv2.imwrite("decompressed_img_{}.jpg".format(str(t0_decompress_img)), decompressed_img)
+	# cv2.imwrite("decompressed_img_{}.jpg".format(str(t0_decompress_img)), decompressed_img)
 
 # t0_decode_img = time.time()
 	# decoded_img = decoded_data[:-1].copy().astype('uint8')
