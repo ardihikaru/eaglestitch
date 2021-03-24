@@ -6,7 +6,9 @@ from datetime import datetime
 from eaglestitch.image_subscriber.zenoh_pubsub.zenoh_net_subscriber import ZenohNetSubscriber
 import logging
 from configurable_vars.configurable_vars import ConfigurableVars, StitchingMode, ActionMode
+from extras.functions import decrypt_str, extract_drone_id, extract_t0
 from concurrent.futures import ThreadPoolExecutor
+import cv2
 
 ###
 
@@ -28,6 +30,10 @@ class ImageSubscriberService(asab.Service):
 	class PubSubMode(object):
 		ZENOH = "zenoh"
 		REDIS = "redis"
+
+	class ZenohConsumerType(object):
+		NON_COMPRESSION_TAGGED_IMAGE = 3
+		COMPRESSION_TAGGED_IMAGE = 4
 
 	def __init__(self, app, service_name="eaglestitch.ImageSubscriberService"):
 		super().__init__(app, service_name)
@@ -57,6 +63,7 @@ class ImageSubscriberService(asab.Service):
 		self.img_ch = asab.Config["stitching:config"].getint("img_ch")
 
 		self.pubsub_mode = asab.Config["pubsub:config"]["mode"]
+		self.comsumer_type = asab.Config["pubsub:config"].getint("comsumer_type")
 
 		# config zenoh pubsub config
 		self.zenoh_comm_protocol = asab.Config["zenoh:config"]["comm_protocol"]
@@ -197,11 +204,8 @@ class ImageSubscriberService(asab.Service):
 			# Force stop the stitching processor
 			self._processor_status = False
 
-	def img_listener(self, consumed_data):
-		self.batch_num += 1
-
-		# For debugging only; please comment it once done the debugging session
-		# print(" ######### self.batch_num = ", self.batch_num)
+	# Deprecated: no more tested!
+	def _extract_non_compression_tagged_img(self, consumed_data):
 
 		# ####################### For tuple data
 		t0_decoding = time.time()
@@ -209,16 +213,36 @@ class ImageSubscriberService(asab.Service):
 		encoder_format = [
 			('id', 'U10'),
 			('timestamp', 'f'),
-			('data', [('flatten', 'i')], (1, img_total_size)),
-			('store_enabled', '?'),
+			# ('data', [('flatten', 'i')], (1, img_total_size)),
+			# ('data', [('flatten', 'i')], (247142, 1)),
+			# ('data', 'U10'),
+			# ('data', 'a'),
+			# ('data', 'object'),
+			# ('data', 'a25'),
+			('data', 'U25'),
+			# ('store_enabled', '?'),
 		]
 		deserialized_bytes = np.frombuffer(consumed_data.payload, dtype=encoder_format)
+		# deserialized_bytes = np.frombuffer(consumed_data.payload, dtype=object)
 
 		t1_decoding = (time.time() - t0_decoding) * 1000
 		L.warning(
-			('\n[ZENOH CONSUMER][%s] Latency img_info (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
+			('\n[ZENOH CONSUMER][%s] Latency img_info (%.3f ms) \n' % ("ZENOH CONSUMER", t1_decoding)))
 
 		t0_decoding = time.time()
+
+		print(" ### DISINI ...")
+		t1 = time.time()
+		# flatten_img = deserialized_bytes["data"]["flatten"][0]
+		flatten_img = np.frombuffer(deserialized_bytes["data"][0], dtype=np.int8)
+		print(" ### SHAPE flatten_img:", flatten_img.shape)
+		# flatten_img =
+		print(" ### len flatten_img:", len(flatten_img), type(flatten_img))
+		decimg = cv2.imdecode(flatten_img, 1)  # decompress
+		t2 = time.time() - t1
+		print(" ### SHAPE decimg:", decimg.shape)
+		print('\nLatency Decode: (%.2f ms)' % (t2 * 1000))
+		cv2.imwrite("hasil.jpg", stitched_img)
 
 		# decode data
 		img_info = {
@@ -232,31 +256,139 @@ class ImageSubscriberService(asab.Service):
 
 		t1_decoding = (time.time() - t0_decoding) * 1000
 		L.warning(
-			('\n[ZENOH CONSUMER][%s] Latency reformat image (%.3f ms) \n' % (datetime.now().strftime("%H:%M:%S"), t1_decoding)))
-		################################
+			('\n[ZENOH CONSUMER][%s] Latency reformat image (%.3f ms) \n' % ("ZENOH CONSUMER", t1_decoding)))
+		###############################
 
-		# Check Stitching mode
-		# if disabled (false), simply do nothing and make sure to empty any related variables
-		if not self._processor_status and not self.forced_stop:
-			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
-			# Always empty any related variables
-			self.batch_num = 0
-			self.batch_imgs = []
-			self.frame_skip_counter = 0
-			self.enqueued_frames = 0
-		if self._processor_status and self._stitching_mode == StitchingMode.BATCH.value:
-			# Batch mode
-			# It will enqueue up to `target_stitch` frames and do stitching each
-			self.__exec_stitching_in_batch_mode(img_info)
+		return img_info
 
-		elif self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
-			# Full mode
-			# It will enqueue all captured images (except skipped frames and/or hard limited) and do stitching only ONCE
-			self.__exec_stitching_in_full_mode(img_info)
+	def _extract_compression_tagged_img(self, consumed_data):
+		"""
+		Expected data model:
+		[
+			[img_data],  # e.g. 1000
+			[drone_id],  # extra tag 01
+			[t0_part_1],  # extra tag 02
+			[t0_part_2],  # extra tag 03
+			[total_number_of_tag],
+			[tagged_data_len],  # total array size: `img_data` + `total_number_of_tag` + 1
+		]
+		"""
+		# print(" #### LISTENER ..")
 
-		# Finalize and start the stitching pipeline
-		elif not self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
-			self.__exec_stitching_in_full_mode(img_info)
+		t0_decode = time.time()
+		decoded_data = np.frombuffer(consumed_data.payload, dtype=np.int64)
+		decoded_data_len = list(decoded_data.shape)[0]
+		decoded_data = decoded_data.reshape(decoded_data_len, 1)
+		array_len = decoded_data[-1][0]
+		extra_tag_len = decoded_data[-2][0]
+		encoded_img_len = array_len - extra_tag_len
+		# print(" ----- decoded_data_len:", decoded_data_len)
+		# print(" ----- array_len:", array_len)
+		# print(" ----- extra_tag_len:", extra_tag_len)
+		# print(" ----- encoded_img_len:", encoded_img_len)
+		# print(" ----- SHAPE decoded_data:", decoded_data.shape)
+		# decoded_data = np.frombuffer(encoded_data, dtype=np.uint64)
+		# print(type(decoded_data), decoded_data.shape)
+		# print(type(decoded_data))
+		# print(" TAGGED DATA LEN:", decoded_data[:-1])
+		# print(decoded_data)
+		t1_decode = (time.time() - t0_decode) * 1000
+		L.warning(('[%s] Latency DECODING Payload (%.3f ms) ' % ("ZENOH CONSUMER", t1_decode)))
+
+		# test printing
+		# print(" ##### decoded_data[-1][0] (tagged_data_len) = ", decoded_data[-1][0])  # tagged_data_len
+		# print(" ##### decoded_data[-2][0] (total_number_of_tag) = ", decoded_data[-2][0])  # total_number_of_tag
+		# print(" ##### decoded_data[-3][0] (t0_part_2) = ", decoded_data[-3][0])  # t0_part_2
+		# print(" ##### decoded_data[-4][0] (t0_part_1) = ", decoded_data[-4][0])  # t0_part_1
+		# print(" ##### decoded_data[-5][0] (drone_id) = ", decoded_data[-5][0])  # drone_id
+		# print(" ##### decoded_data[-6][0] (img_data) = ", decoded_data[-6][0])  # img_data
+
+		# Extract information
+		t0_tag_extraction = time.time()
+		drone_id = extract_drone_id(decoded_data, encoded_img_len)
+		t0 = extract_t0(decoded_data, encoded_img_len)
+		# print(" ----- drone_id:", drone_id, type(drone_id))
+		# print(" ----- t0:", t0, type(t0))
+		t1_tag_extraction = (time.time() - t0_tag_extraction) * 1000
+		L.warning(('[%s] Latency Tag Extraction (%.3f ms) ' % ("ZENOH CONSUMER", t1_tag_extraction)))
+
+		# popping tagged information
+		t0_non_img_cleaning = time.time()
+		# print(" ----- OLD SHAPE decoded_data:", decoded_data.shape)
+		for i in range(extra_tag_len):
+			decoded_data = np.delete(decoded_data, -1)
+		decoded_data = decoded_data.reshape(decoded_data_len - 5, 1)
+		# print(" ----- NEWWWW SHAPE decoded_data:", decoded_data.shape)
+		# print(" ##### decoded_data[-1][0] = ", decoded_data[-1][0])  # tagged_data_len
+		t1_non_img_cleaning = (time.time() - t0_non_img_cleaning) * 1000
+		L.warning(
+			('[%s] Latency Non Image Cleaning (%.3f ms) ' % ("ZENOH CONSUMER", t1_non_img_cleaning)))
+
+		# extracting (compressed) image information
+		t0_img_extraction = time.time()
+		extracted_cimg = decoded_data[:-1].copy().astype('uint8')
+		t1_img_extraction = (time.time() - t0_img_extraction) * 1000
+		L.warning(('[%s] Latency Image Extraction (%.3f ms) ' % ("ZENOH CONSUMER", t1_img_extraction)))
+
+		# Image de-compression (restore back into FullHD)
+		t0_decompress_img = time.time()
+		# print(" ### SHAPE: decoded_img = ", decoded_img.shape)
+		deimg_len = list(extracted_cimg.shape)[0]
+		# print(" ----- deimg_len:", deimg_len)
+		decoded_img = extracted_cimg.reshape(deimg_len, 1)
+		# print(" ### SHAPE: decoded_img = ", decoded_img.shape, type(decoded_img), type(decoded_img[0][0]))
+		decompressed_img = cv2.imdecode(decoded_img, 1)  # decompress
+		# print(" ----- SHAPE decompressed_img:", decompressed_img.shape)
+		t1_decompress_img = (time.time() - t0_decompress_img) * 1000
+		L.warning(('[%s] Latency DE-COMPRESSING IMG (%.3f ms) \n' % ("ZENOH CONSUMER", t1_decompress_img)))
+
+		# cv2.imwrite("decompressed_img.jpg", decompressed_img)
+		# cv2.imwrite("decompressed_img_{}.jpg".format(str(t0_decompress_img)), decompressed_img)
+
+		img_info = None
+		return img_info
+
+	def img_listener(self, consumed_data):
+		self.batch_num += 1
+
+		# For debugging only; please comment it once done the debugging session
+		# print(" ######### self.batch_num = ", self.batch_num)
+		# print(" ######### self.comsumer_type = ", self.comsumer_type)
+
+		if self.comsumer_type == self.ZenohConsumerType.NON_COMPRESSION_TAGGED_IMAGE:
+			img_info = self._extract_non_compression_tagged_img(consumed_data)
+		elif self.comsumer_type == self.ZenohConsumerType.COMPRESSION_TAGGED_IMAGE:
+			img_info = self._extract_compression_tagged_img(consumed_data)
+		else:
+			_err_msg = ">>>>> [ZENOH Consumer] Invalid Zenoh consumer type"
+			L.error(_err_msg)
+			exit(0)  # Force stop the system!
+
+		# For debugging purpose..
+		# exit(0)  # Force stop the system!
+
+		# # Check Stitching mode
+		# # if disabled (false), simply do nothing and make sure to empty any related variables
+		# if not self._processor_status and not self.forced_stop:
+		# 	L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
+		# 	# Always empty any related variables
+		# 	self.batch_num = 0
+		# 	self.batch_imgs = []
+		# 	self.frame_skip_counter = 0
+		# 	self.enqueued_frames = 0
+		# if self._processor_status and self._stitching_mode == StitchingMode.BATCH.value:
+		# 	# Batch mode
+		# 	# It will enqueue up to `target_stitch` frames and do stitching each
+		# 	self.__exec_stitching_in_batch_mode(img_info)
+		#
+		# elif self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
+		# 	# Full mode
+		# 	# It will enqueue all captured images (except skipped frames and/or hard limited) and do stitching only ONCE
+		# 	self.__exec_stitching_in_full_mode(img_info)
+		#
+		# # Finalize and start the stitching pipeline
+		# elif not self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
+		# 	self.__exec_stitching_in_full_mode(img_info)
 
 	def _start_zenoh(self):
 		self.sub_svc = ZenohNetSubscriber(
