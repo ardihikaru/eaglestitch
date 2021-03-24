@@ -1,3 +1,30 @@
+## 0.6.0 (March 24, 2021)
+  - Merge branch 'feature/compress-img' into develop
+  - add commented code for testing in university's environment
+  - change printing into log warning
+  - remove printing; disable force exit (used for debugging mode)
+  - implement compressed tagged image consumer
+  - remove printing; remove save to disk (used only for debugging)
+  - add config to determine the zenoh consumer type
+  - add test file for publishing tagged image (with my custom framework)
+  - add `encrypt_str` function and add function descriptions
+  - add common functions related with zenoh pubsub
+  - enable/disable CV Out
+  - add sample pubsub
+  - add new feature to publish compressed images
+  - - add new feature to compress image before sending via zenoh publisher - check extracted frame and convert it into fullHD (optional)
+  - add sample to save to disk
+  - bugfix: missmatch drone_id; change default `selector` and `peer`
+  - comment image to disk function
+  - code refactor: set `extra_len` as the total number of array elements
+  - update test zenoh pubsub with compressed images
+  - update test pubsub with int only
+  - add notes
+  - add examples pubsub image zenoh (compressed)
+  - add examples pubsub image zenoh
+  - add latency info
+  - Merge branch 'release/0.5' into develop
+
 ## 0.5.0 (March 18, 2021)
   - Merge branch 'bugfix/stop-not-working-in-mode-2' into develop
   - code refactor
