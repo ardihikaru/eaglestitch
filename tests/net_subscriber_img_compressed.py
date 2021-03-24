@@ -133,6 +133,7 @@ def listener_v2(consumed_data):
 """
 selector = "/eaglestitch/svc/**"
 # listener = "tcp/172.18.8.188:7447"
+# listener = "tcp/140.113.86.92:7446"
 listener = "tcp/localhost:7446"
 
 sub = ZenohNetSubscriber(

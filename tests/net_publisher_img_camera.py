@@ -70,6 +70,7 @@ def encrypt_str(str_val, byteorder="little"):
 # selector = "/demo/**"
 # peer = "tcp/172.18.8.188:7447"
 # peer = "tcp/localhost:7446"
+# peer = "tcp/140.113.193.134:7446"
 peer = None
 
 # configure zenoh service
@@ -96,6 +97,7 @@ encoder_format = [
 window_title = "output-raw"
 # cap = cv2.VideoCapture(0)
 # cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/0312_2_CUT.mp4")
+# cap = cv2.VideoCapture("/home/tim/devel/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
 cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
 if _enable_cv_out:
 	cv2.namedWindow(window_title, cv2.WND_PROP_FULLSCREEN)
