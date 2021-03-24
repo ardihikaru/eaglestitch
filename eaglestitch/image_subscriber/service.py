@@ -354,7 +354,7 @@ class ImageSubscriberService(asab.Service):
 
 		# For debugging only; please comment it once done the debugging session
 		# print(" ######### self.batch_num = ", self.batch_num)
-		print(" ######### self.comsumer_type = ", self.comsumer_type)
+		# print(" ######### self.comsumer_type = ", self.comsumer_type)
 
 		if self.comsumer_type == self.ZenohConsumerType.NON_COMPRESSION_TAGGED_IMAGE:
 			img_info = self._extract_non_compression_tagged_img(consumed_data)
@@ -366,7 +366,7 @@ class ImageSubscriberService(asab.Service):
 			exit(0)  # Force stop the system!
 
 		# For debugging purpose..
-		exit(0)  # Force stop the system!
+		# exit(0)  # Force stop the system!
 
 		# # Check Stitching mode
 		# # if disabled (false), simply do nothing and make sure to empty any related variables
