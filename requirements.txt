@@ -1,8 +1,7 @@
 asab
 motor
 numpy
-opencv-python
 simplejson
-opencv-contrib-python
 imutils
 aiohttp-jinja2
+nanocamera
