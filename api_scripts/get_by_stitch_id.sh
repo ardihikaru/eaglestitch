@@ -34,5 +34,5 @@ then
       PORT="8888"  # default value
 fi
 
-curl --location --request GET "http://${HOST}:8888/stitching/${STITCH_IMG_ID}?to_url=${TO_URL}"
+curl --location --request GET "http://${HOST}:${PORT}/stitching/${STITCH_IMG_ID}?to_url=${TO_URL}"
 echo ""
