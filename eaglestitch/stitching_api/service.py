@@ -78,6 +78,10 @@ class StitchingAPIService(asab.Service):
 						_data = await self._convert_all_paths_to_url(_data, root_url)
 			else:
 				_data = await self.storage_svc.get_from_db(self.COLLECTION_NAME, self.keys)
+
+				if to_url:
+					for i in range(len(_data)):
+						_data[i] = await self._convert_all_paths_to_url(_data[i], root_url)
 		except Exception as e:  # id not found
 			return 400, str(e), None
 
