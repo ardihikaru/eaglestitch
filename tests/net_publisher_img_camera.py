@@ -15,9 +15,6 @@ try:
 except:
 	print("[WARNING] Unable to load `nanocamera` module")
 
-# Enable / disable cvout
-_enable_cv_out = False
-
 # Encoding parameter
 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]  # The default value for IMWRITE_JPEG_QUALITY is 95
 
@@ -37,6 +34,14 @@ parser.add_argument('--path', '-p', dest='path',
                     default='/eaglestitch/svc/zenoh-python-pub',
                     type=str,
                     help='The name of the resource to publish.')
+parser.add_argument('--video', '-v', dest='video',
+                    default="0",
+                    type=str,
+                    help='The name of the resource to publish.')
+parser.add_argument('--cvout', dest='cvout', action='store_true', help="Use CV Out")
+parser.set_defaults(cvout=False)
+# parser.add_argument('--no-compress', dest='compress', action='store_false', help="Use CV Out")
+# parser.set_defaults(compress=True)
 
 args = parser.parse_args()
 # --- [END] Command line argument parsing --- --- --- --- --- ---
@@ -64,6 +69,13 @@ def get_capture_camera(capt, cam_mode):
 peer = args.peer
 if peer is not None:
 	peer = ",".join(args.peer)
+
+video_path = args.video
+if video_path == "0":
+	video_path = int(video_path)
+
+# Enable / disable cvout
+_enable_cv_out = args.cvout
 
 # configure zenoh service
 path = args.path
@@ -94,10 +106,11 @@ if args.camera == 1:
 		print("[ERROR] Unable to load `nano` package")
 		exit(0)
 elif args.camera == 2:
+	cap = cv2.VideoCapture(video_path)
 	# cap = cv2.VideoCapture(0)
 	# cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/0312_2_CUT.mp4")
 	# cap = cv2.VideoCapture("/home/tim/devel/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
-	cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
+	# cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
 else:
 	print("[ERROR] Unrecognized camera mode")
 	exit(0)
