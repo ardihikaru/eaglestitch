@@ -1,5 +1,6 @@
 import asab.web.rest
 import aiohttp.web
+from distutils.util import strtobool
 import logging
 
 ###
@@ -18,10 +19,17 @@ class StitchingResultSectionWebHandler(object):
 		app.RESTWebContainer.WebApp.router.add_get('/stitching', self.get_stitching)
 		app.RESTWebContainer.WebApp.router.add_get('/stitching/{stitch_id}', self.get_stitching_by_id)
 
-		self.to_url = asab.Config["eaglestitch:rest"].getboolean("to_url")
-
 	async def get_stitching(self, request):
-		status, msg, data = await self.stitching_api_svc.get_stitching_result()
+		params = request.rel_url.query
+
+		# capture `to_url` value
+		if params.get("to_url") is None:
+			L.warning("`to_url` is missing from request; set default value as `False`")
+			_to_url = False
+		else:
+			_to_url = bool(strtobool(params.get("to_url")))
+
+		status, msg, data = await self.stitching_api_svc.get_stitching_result(to_url=_to_url)
 
 		# Here we received the barrier and we can respond 'OK'
 		return asab.web.rest.json_response(request, {
@@ -31,6 +39,15 @@ class StitchingResultSectionWebHandler(object):
 		}, status=status)
 
 	async def get_stitching_by_id(self, request):
+		params = request.rel_url.query
+
+		# capture `to_url` value
+		if params.get("to_url") is None:
+			L.warning("`to_url` is missing from request; set default value as `False`")
+			_to_url = False
+		else:
+			_to_url = bool(strtobool(params.get("to_url")))
+
 		stitch_id = (request.match_info["stitch_id"]).upper()
 		if stitch_id is None:
 			L.error("`stitch_id` is missing from request.")
@@ -38,7 +55,7 @@ class StitchingResultSectionWebHandler(object):
 
 		status, msg, data = await self.stitching_api_svc.get_stitching_result(
 			stitch_id=stitch_id,
-			to_url=self.to_url,
+			to_url=_to_url,
 		)
 
 		# Here we received the barrier and we can respond 'OK'
