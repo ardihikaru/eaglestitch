@@ -9,6 +9,8 @@ import simplejson as json
 from enum import Enum
 import logging
 import argparse
+# from hurry.filesize import size as fsize
+from pycore.extras.functions import humanbytes as fsize
 
 try:
 	import nanocamera as nano
@@ -152,6 +154,9 @@ while get_capture_camera(cap, args.camera):
 		if _w != _wt:
 			frame = cv2.resize(frame, (1920, 1080))
 
+		# print size
+		print(" >>> FRAME Size BEFORE compression: {} or {}".format(frame.nbytes, fsize(frame.nbytes)))
+
 		# compress image (if enabled)
 		if _is_compressed:
 			# NEW encoding method
@@ -166,6 +171,9 @@ while get_capture_camera(cap, args.camera):
 				datetime.now().strftime("%H:%M:%S"), t1_img_compression)))
 			tagged_data_len = compressed_img_len + extra_len  # `tagged_data_len` itself contains 1 extra slot
 			# cv2.imwrite("hasil.jpg", decimg)
+
+			# print size
+			print(" >>> FRAME Size AFTER compression: {} or {}".format(compressed_img.nbytes, fsize(compressed_img.nbytes)))
 
 			# vertically tag this frame with an extra inforamtion
 			t0_tag_extraction = time.time()
