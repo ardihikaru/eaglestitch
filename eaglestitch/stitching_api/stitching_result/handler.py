@@ -18,8 +18,8 @@ class StitchingResultSectionWebHandler(object):
 		self.App = app
 		self.stitching_api_svc = app.get_service("eaglestitch.StitchingAPIService")
 
-		# app.RESTWebContainer.WebApp.router.add_get('/stitching', self.get_stitching)
-		# app.RESTWebContainer.WebApp.router.add_get('/stitching/{stitch_id}', self.get_stitching_by_id)
+		# initialize cors config
+		self.cors = aiohttp_cors.setup(app.RESTWebContainer.WebApp)
 
 		# setup routes
 		resources = [
