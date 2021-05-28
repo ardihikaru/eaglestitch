@@ -2,6 +2,8 @@ import asab.web.rest
 import aiohttp.web
 from configurable_vars.configurable_vars import ConfigurableVars, StitchingMode
 import logging
+import aiohttp_cors
+from extras.cors import CORS_OPTIONS
 
 ###
 
@@ -16,8 +18,18 @@ class StitchingControllerSectionWebHandler(object):
 		self.App = app
 		self.stitching_api_svc = app.get_service("eaglestitch.StitchingAPIService")
 
-		app.RESTWebContainer.WebApp.router.add_get('/stitching/trigger/{action}', self.capture_trigger_action)
-		app.RESTWebContainer.WebApp.router.add_put('/stitching/config', self.live_config_update)
+		# initialize cors config
+		self.cors = aiohttp_cors.setup(app.RESTWebContainer.WebApp)
+
+		# setup routes
+		resources = [
+			app.RESTWebContainer.WebApp.router.add_get('/stitching/trigger/{action}', self.capture_trigger_action),
+			app.RESTWebContainer.WebApp.router.add_put('/stitching/config', self.live_config_update)
+		]
+
+		# append cors to each route
+		for res in resources:
+			self.cors.add(res, CORS_OPTIONS)
 
 		# initialize valid configurable vars
 		self._valid_configurable_vars = frozenset([

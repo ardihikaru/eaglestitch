@@ -92,7 +92,7 @@ print(" => RId {}".format(rid))
 print("Declaring Publisher on {}".format(rid))
 publisher = session.declare_publisher(rid)
 
-root_path = "./../data/out1.png"
+root_path = "./../data/sample_img.png"
 frame = cv2.imread(root_path)
 # print("SHAPE: ", frame.shape)
 

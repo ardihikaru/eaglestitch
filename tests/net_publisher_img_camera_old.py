@@ -8,45 +8,12 @@ import cv2
 import simplejson as json
 from enum import Enum
 import logging
-import argparse
-# from hurry.filesize import size as fsize
-from pycore.extras.functions import humanbytes as fsize
 
-try:
-	import nanocamera as nano
-except:
-	print("[WARNING] Unable to load `nanocamera` module")
+# Enable / disable cvout
+_enable_cv_out = False
 
 # Encoding parameter
 encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 70]  # The default value for IMWRITE_JPEG_QUALITY is 95
-
-# --- [START] Command line argument parsing --- --- --- --- --- ---
-parser = argparse.ArgumentParser(
-	description='Zenoh Publisher example')
-parser.add_argument('--camera', '-m', dest='camera',  # e.g. 140.113.193.134 (Little Boy)
-                    default=2,  # `1`=JetsonNano; `2`=Normal Camera (PC/Laptop/etc)
-                    type=int,
-                    help='The name of the resource to publish.')
-parser.add_argument('--peer', '-e', dest='peer',  # e.g. 140.113.193.134 (Little Boy)
-                    metavar='LOCATOR',
-                    action='append',
-                    type=str,
-                    help='Peer locators used to initiate the zenoh session.')
-parser.add_argument('--path', '-p', dest='path',
-                    default='/eaglestitch/svc/zenoh-python-pub',
-                    type=str,
-                    help='The name of the resource to publish.')
-parser.add_argument('--video', '-v', dest='video',
-                    default="0",
-                    type=str,
-                    help='The name of the resource to publish.')
-parser.add_argument('--cvout', dest='cvout', action='store_true', help="Use CV Out")
-parser.set_defaults(cvout=False)
-# parser.add_argument('--no-compress', dest='compress', action='store_false', help="Use CV Out")
-# parser.set_defaults(compress=True)
-
-args = parser.parse_args()
-# --- [END] Command line argument parsing --- --- --- --- --- ---
 
 ###
 
@@ -61,26 +28,53 @@ def encrypt_str(str_val, byteorder="little"):
 	return encrypted_val  # max 19 digit
 
 
-def get_capture_camera(capt, cam_mode):
-	if cam_mode == 1:
-		return capt.isReady()
-	else:
-		return cap.isOpened()
+# Define input data
+# [1] Data Type: simple Integer / Float / Bool
+# encoder_format = None
+# itype = 1
+# val = 123
+###############################################################
 
+# [2] Data Type: Numpy Array (image)
+# encoder_format = None
+# itype = 2
+# root_path = "/home/s010132/devel/eagleeye/data/out1.png"
+# val = cv2.imread(root_path)
+###############################################################
 
-peer = args.peer
-if peer is not None:
-	peer = ",".join(args.peer)
+# [3] Data Type: Numpy Array with structured array format (image + other information)
+# itype = 3
+# encoder_format = [
+# 	('id', 'U10'),
+# 	('timestamp', 'f'),
+# 	('data', [('flatten', 'i')], (1, 6220800)),
+# 	('store_enabled', '?'),
+# ]
+# root_path = "/home/s010132/devel/eagleeye/data/out1.png"
+# img = cv2.imread(root_path)
+# img_1d = img.reshape(1, -1)
+# val = [('Drone 1', time.time(), img_1d, False)]
+###############################################################
 
-video_path = args.video
-if video_path == "0":
-	video_path = int(video_path)
+# # Scenario 1: Simple Pub/Sub with a single PC
+# selector = "/demo/**"
 
-# Enable / disable cvout
-_enable_cv_out = args.cvout
+# Scenario 2: Pub/Sub with two hosts
+"""
+	Simulated scenario:
+	- `Host #01` will has IP `192.168.1.110`
+	- `Host #01` run `subscriber`
+	- `Host #02` run `publisher`
+	- Asumming that both hosts are in the multicast network environment
+"""
+# selector = "/demo/**"
+# peer = "tcp/172.18.8.188:7447"
+# peer = "tcp/localhost:7446"
+# peer = "tcp/140.113.193.134:7446"
+peer = None
 
 # configure zenoh service
-path = args.path
+path = "/eaglestitch/svc/zenoh-python-pub"
 z_svc = ZenohNetPublisher(
 	_path=path, _session_type="PUBLISHER", _peer=peer
 )
@@ -101,22 +95,10 @@ encoder_format = [
 ]
 
 window_title = "output-raw"
-if args.camera == 1:
-	try:
-		cap = nano.Camera(camera_type=1)
-	except:
-		print("[ERROR] Unable to load `nano` package")
-		exit(0)
-elif args.camera == 2:
-	cap = cv2.VideoCapture(video_path)
-	# cap = cv2.VideoCapture(0)
-	# cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/0312_2_CUT.mp4")
-	# cap = cv2.VideoCapture("/home/tim/devel/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
-	# cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
-else:
-	print("[ERROR] Unrecognized camera mode")
-	exit(0)
-
+# cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/0312_2_CUT.mp4")
+# cap = cv2.VideoCapture("/home/tim/devel/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
+cap = cv2.VideoCapture("/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4")
 if _enable_cv_out:
 	cv2.namedWindow(window_title, cv2.WND_PROP_FULLSCREEN)
 	# cv2.resizeWindow("Image", 1920, 1080)  # Enter your size
@@ -134,15 +116,11 @@ int_drone_id = encrypt_str("Drone 01")  # contains 1 extra slot
 t0_array = str(time.time()).split(".")  # contains 2 extra slots
 extra_len = 5  # contains 1 extra slot; another one slot is from `tagged_data_len` variable
 
-# while cap.isOpened():
-while get_capture_camera(cap, args.camera):
+while cap.isOpened():
 	_frame_id += 1
 	# ret = a boolean return value from getting the frame, frame = the current frame being projected in the video
 	try:
-		if args.camera == 1:  # jetson nano
-			ret, frame = True, cap.read()
-		else:
-			ret, frame = cap.read()
+		ret, frame = cap.read()
 
 		# do it ONCE
 		# detect width and height
@@ -154,9 +132,6 @@ while get_capture_camera(cap, args.camera):
 		if _w != _wt:
 			frame = cv2.resize(frame, (1920, 1080))
 
-		# print size
-		print(" >>> FRAME Size BEFORE compression: {} or {}".format(frame.nbytes, fsize(frame.nbytes)))
-
 		# compress image (if enabled)
 		if _is_compressed:
 			# NEW encoding method
@@ -167,13 +142,9 @@ while get_capture_camera(cap, args.camera):
 			_, compressed_img = cv2.imencode('.jpg', frame, encode_param)
 			compressed_img_len, _ = compressed_img.shape
 			t1_img_compression = (time.time() - t0_img_compression) * 1000
-			print(('[%s] Latency Image Compression (%.3f ms) ' % (
-				datetime.now().strftime("%H:%M:%S"), t1_img_compression)))
+			print(('[%s] Latency Image Compression (%.3f ms) ' % (datetime.now().strftime("%H:%M:%S"), t1_img_compression)))
 			tagged_data_len = compressed_img_len + extra_len  # `tagged_data_len` itself contains 1 extra slot
 			# cv2.imwrite("hasil.jpg", decimg)
-
-			# print size
-			print(" >>> FRAME Size AFTER compression: {} or {}".format(compressed_img.nbytes, fsize(compressed_img.nbytes)))
 
 			# vertically tag this frame with an extra inforamtion
 			t0_tag_extraction = time.time()

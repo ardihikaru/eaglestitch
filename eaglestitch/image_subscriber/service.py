@@ -345,7 +345,13 @@ class ImageSubscriberService(asab.Service):
 		# cv2.imwrite("decompressed_img.jpg", decompressed_img)
 		# cv2.imwrite("decompressed_img_{}.jpg".format(str(t0_decompress_img)), decompressed_img)
 
-		img_info = None
+		# decode data
+		img_info = {
+			"id": drone_id,
+			"img": decompressed_img,
+			"timestamp": t0,
+		}
+
 		return img_info
 
 	def img_listener(self, consumed_data):
@@ -367,28 +373,28 @@ class ImageSubscriberService(asab.Service):
 		# For debugging purpose..
 		# exit(0)  # Force stop the system!
 
-		# # Check Stitching mode
-		# # if disabled (false), simply do nothing and make sure to empty any related variables
-		# if not self._processor_status and not self.forced_stop:
-		# 	L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
-		# 	# Always empty any related variables
-		# 	self.batch_num = 0
-		# 	self.batch_imgs = []
-		# 	self.frame_skip_counter = 0
-		# 	self.enqueued_frames = 0
-		# if self._processor_status and self._stitching_mode == StitchingMode.BATCH.value:
-		# 	# Batch mode
-		# 	# It will enqueue up to `target_stitch` frames and do stitching each
-		# 	self.__exec_stitching_in_batch_mode(img_info)
-		#
-		# elif self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
-		# 	# Full mode
-		# 	# It will enqueue all captured images (except skipped frames and/or hard limited) and do stitching only ONCE
-		# 	self.__exec_stitching_in_full_mode(img_info)
-		#
-		# # Finalize and start the stitching pipeline
-		# elif not self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
-		# 	self.__exec_stitching_in_full_mode(img_info)
+		# Check Stitching mode
+		# if disabled (false), simply do nothing and make sure to empty any related variables
+		if not self._processor_status and not self.forced_stop:
+			L.warning("[ZENOH CONSUMER] I AM DOING NOTHING AT THE MOMENT")
+			# Always empty any related variables
+			self.batch_num = 0
+			self.batch_imgs = []
+			self.frame_skip_counter = 0
+			self.enqueued_frames = 0
+		if self._processor_status and self._stitching_mode == StitchingMode.BATCH.value:
+			# Batch mode
+			# It will enqueue up to `target_stitch` frames and do stitching each
+			self.__exec_stitching_in_batch_mode(img_info)
+
+		elif self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
+			# Full mode
+			# It will enqueue all captured images (except skipped frames and/or hard limited) and do stitching only ONCE
+			self.__exec_stitching_in_full_mode(img_info)
+
+		# Finalize and start the stitching pipeline
+		elif not self._processor_status and self._stitching_mode == StitchingMode.STREAM.value:
+			self.__exec_stitching_in_full_mode(img_info)
 
 	def _start_zenoh(self):
 		self.sub_svc = ZenohNetSubscriber(

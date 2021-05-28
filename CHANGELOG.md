@@ -1,3 +1,31 @@
+## 0.7.0 (May 28, 2021)
+  - Merge branch 'feature/update-readme' into develop
+  - update how to run
+  - Merge branch 'bugfix/add-cors-controller' into develop
+  - add missing variable
+  - Merge branch 'bugfix/add-cors-controller' into develop
+  - add cors variable
+  - update doc
+  - add cors controller
+  - Merge branch 'feature/bytes-size-calculator' into develop
+  - add bytes size calculator
+  - Merge pull request #3 from ardihikaru/bugfix/unable-to-read-extracted-images
+  - add script to open result in webview
+  - add options
+  - add scripts to invoke APIs
+  - add feature to enable/disable response with http path
+  - bugfix: unable to read `to_url` variable
+  - bugfix: change input filename
+  - add input video and cvout config
+  - update doc
+  - remove opencv related lib; add `nanocamera` lib
+  - bugfix: forgot to enable and assign `img_info` variable
+  - add and implement `argparse`
+  - backup old code
+  - update comment
+  - add `site.conf` template
+  - Merge branch 'release/0.6' into develop
+
 ## 0.6.0 (March 24, 2021)
   - Merge branch 'feature/compress-img' into develop
   - add commented code for testing in university's environment

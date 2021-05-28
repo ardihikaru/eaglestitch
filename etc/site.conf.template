@@ -1,0 +1,29 @@
+[stitching:config]
+# please fill out this value, e.g.: root_output_dir=/<ROOT>/data/results/
+root_output_dir=
+
+store_input_imgs=true
+crop=true
+
+# perform stitching in a thread-level
+threaded=true
+
+# default with mode=2
+mode=2
+
+# parameters for `mode=1` ONLY
+# target_stitch=6
+
+# parameters for `mode=2` ONLY
+frame_skip=15
+# Set `max_frames=0` to forcw EagleStitch to stitch all enqueued frames
+max_frames=7
+
+[eaglestitch:rest]
+# Change `localhost` with your IP or vhost
+listen=localhost:8888
+to_url=true
+
+[zenoh:config]
+# Change `localhost` with your IP or vhost
+comm_ip=localhost
