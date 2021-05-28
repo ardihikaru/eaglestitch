@@ -47,6 +47,8 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
     - Clone zenoh: `$ git clone https://github.com/eclipse-zenoh/zenoh-python.git`
     - Go to cloned Zenoh directory: `$ cd zenoh-python`
     - Build the package: `$ maturin develop —release`
+        - **IF ERROR happened**, use this command instead:
+            $ pip install . --use-feature=in-tree-build`
 
 
 # How to use
