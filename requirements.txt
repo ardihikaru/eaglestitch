@@ -6,3 +6,4 @@ imutils
 aiohttp-jinja2
 nanocamera
 hurry.filesize
+aiohttp-cors==0.7.0

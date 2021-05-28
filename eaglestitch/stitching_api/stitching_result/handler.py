@@ -2,6 +2,8 @@ import asab.web.rest
 import aiohttp.web
 from distutils.util import strtobool
 import logging
+import aiohttp_cors
+from extras.cors import CORS_OPTIONS
 
 ###
 
@@ -16,8 +18,18 @@ class StitchingResultSectionWebHandler(object):
 		self.App = app
 		self.stitching_api_svc = app.get_service("eaglestitch.StitchingAPIService")
 
-		app.RESTWebContainer.WebApp.router.add_get('/stitching', self.get_stitching)
-		app.RESTWebContainer.WebApp.router.add_get('/stitching/{stitch_id}', self.get_stitching_by_id)
+		# app.RESTWebContainer.WebApp.router.add_get('/stitching', self.get_stitching)
+		# app.RESTWebContainer.WebApp.router.add_get('/stitching/{stitch_id}', self.get_stitching_by_id)
+
+		# setup routes
+		resources = [
+			app.RESTWebContainer.WebApp.router.add_get('/stitching', self.get_stitching),
+			app.RESTWebContainer.WebApp.router.add_get('/stitching/{stitch_id}', self.get_stitching_by_id)
+		]
+
+		# append cors to each route
+		for res in resources:
+			self.cors.add(res, CORS_OPTIONS)
 
 	async def get_stitching(self, request):
 		params = request.rel_url.query
