@@ -1,3 +1,6 @@
+## 0.7.0-stable (May 28, 2021)
+  - Merge branch 'release/v0.7.0' into develop
+
 ## 0.7.0 (May 28, 2021)
   - Merge branch 'feature/update-readme' into develop
   - update how to run
