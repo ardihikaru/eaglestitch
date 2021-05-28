@@ -55,7 +55,11 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 1. Go to root project directory: `$ cd /../eaglestitch/`
 2. Activate python virtual environment: `$ . venv/bin/activate.fish`
 3. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
-4. Running Zenoh publisher: `$ python tests/net_publisher_img.py`
+4. Running Zenoh publisher: `$ python tests/net_publisher_img_camera.py -e tcp/localhost:7446 --cvout -v /home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4`
+    - You can change `localhost` to a specific IP, and
+    - You can change `/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4` into:
+        - Another video file (with **full path**), or
+        - Change it into `0` to read camera
 
 # Common information
 - RestAPI URL: `$ http://<domain>:8888`
