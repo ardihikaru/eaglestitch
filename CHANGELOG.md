@@ -1,3 +1,11 @@
+## 0.7.1-stable (June 23, 2021)
+  - Merge branch 'features/print-stitching-latency' into develop
+  - log stitching latency
+  - remove `\n`
+  - remove `\n`
+  - update readme
+  - Merge branch 'release/v0.7.0-stable' into develop
+
 ## 0.7.0-stable (May 28, 2021)
   - Merge branch 'release/v0.7.0' into develop
 
