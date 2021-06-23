@@ -101,7 +101,7 @@ class StitchingService(asab.Service):
 			# in seconds
 			t1_stitching = (time.time() - t0_stitching)  # in seconds
 			L.warning(
-				('\n[LATENCY][%s] Latency img_info (%.2f secs) \n' % (
+				('[LATENCY][%s] Latency img_info (%.2f secs) ' % (
 					datetime.now().strftime("%H:%M:%S"), t1_stitching)))
 
 			return True, sticher.get_stitch_result(), sticher.get_stored_input_imgs()
