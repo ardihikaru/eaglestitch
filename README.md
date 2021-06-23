@@ -26,6 +26,7 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 5. Go to main project directory
 6. Install requirements: `$ pip install -r requirements.txt`
 7. Install openCV: `$ pip install opencv-python`
+8. Install and deploy mongo container: `$ docker run -d --name mongo-service --network host mongo`
 
 # Installation (`Bash Shell` + `Real Environment`)
 1. Install [Rust toolchain](https://rustup.rs/) (for Zenoh usage)
@@ -48,18 +49,24 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
     - Go to cloned Zenoh directory: `$ cd zenoh-python`
     - Build the package: `$ maturin develop —release`
         - **IF ERROR happened**, use this command instead:
-            $ pip install . --use-feature=in-tree-build`
+            `$ pip install . --use-feature=in-tree-build`
 
 
 # How to use
 1. Go to root project directory: `$ cd /../eaglestitch/`
 2. Activate python virtual environment: `$ . venv/bin/activate.fish`
+    - If you are not using a virtual environment, run following command:
+        - Format: `$ export PYTHONPATH=:<ROOT_PROJECT>/eaglestitch/pycore/`
+        - Server: `$ export PYTHONPATH=:/home/popeye/devel/eaglestitch/pycore/`
+        - Server: `$ export PYTHONPATH=:/home/eagles/devel/eaglestitch/pycore/`
 3. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
-4. Running Zenoh publisher: `$ python tests/net_publisher_img_camera.py -e tcp/localhost:7446 --cvout -v /home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4`
+4. Running Zenoh publisher: `$ python3 tests/net_publisher_img_camera.py -e tcp/localhost:7446 --cvout -v /home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4`
+    - Sample send to EagleStitch Server: `$ python3 tests/net_publisher_img_camera.py -e tcp/192.168.1.11:7446`
     - You can change `localhost` to a specific IP, and
     - You can change `/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4` into:
         - Another video file (with **full path**), or
         - Change it into `0` to read camera
+        - e.g.: `/home/eagles/devel/eaglestitch/data/videos/0312_1_LtoR_1.mp4`
 
 # Common information
 - RestAPI URL: `$ http://<domain>:8888`

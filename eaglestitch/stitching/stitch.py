@@ -1,6 +1,8 @@
 import cv2
 import imutils
 from extras.functions import get_current_datetime, create_folder
+import time
+from datetime import datetime
 
 try:
 	from black_region_remover import BlackRegionRemover  # for direct execution
@@ -48,6 +50,8 @@ class Stitch(object):
 	def run(self):
 		L.warning("[INFO] I am running stitching now")
 
+		t0_stitching = time.time()
+
 		# Perform stitching
 		stitching_succeed, stitched_img = self._perform_stitching()
 
@@ -76,6 +80,9 @@ class Stitch(object):
 				clean_stitched_img_path = None
 		else:
 			clean_stitched_img_path = None
+
+		t1_stitching = (time.time() - t0_stitching)
+		L.warning(('[%s] Latency Stitching (%.3f s) ' % (datetime.now().strftime("%H:%M:%S"), t1_stitching)))
 
 		# save stitching result
 		self.stitch_result = {
