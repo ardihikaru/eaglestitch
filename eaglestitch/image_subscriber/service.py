@@ -227,7 +227,7 @@ class ImageSubscriberService(asab.Service):
 
 		t1_decoding = (time.time() - t0_decoding) * 1000
 		L.warning(
-			('\n[ZENOH CONSUMER][%s] Latency img_info (%.3f ms) \n' % ("ZENOH CONSUMER", t1_decoding)))
+			('[ZENOH CONSUMER][%s] Latency img_info (%.3f ms) ' % ("ZENOH CONSUMER", t1_decoding)))
 
 		t0_decoding = time.time()
 
