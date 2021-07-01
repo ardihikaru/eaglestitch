@@ -3,9 +3,6 @@ import asyncio
 import time
 import simplejson as json
 from bson.objectid import ObjectId
-from concurrent.futures import ThreadPoolExecutor
-from eaglestitch.image_subscriber.zenoh_pubsub.core.zenoh_net import ZenohNet
-from eaglestitch.image_subscriber.zenoh_pubsub.zenoh_net_subscriber import ZenohNetSubscriber
 import logging
 
 ###
