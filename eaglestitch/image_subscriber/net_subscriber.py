@@ -1,5 +1,5 @@
-from eaglestitch.image_subscriber.zenoh_pubsub.core.zenoh_net import ZenohNet
-from eaglestitch.image_subscriber.zenoh_pubsub.zenoh_net_subscriber import ZenohNetSubscriber
+from eagle_zenoh.zenoh_lib.core.zenoh_net import ZenohNet
+from eagle_zenoh.zenoh_lib.zenoh_net_subscriber import ZenohNetSubscriber
 import sys
 import time
 from datetime import datetime

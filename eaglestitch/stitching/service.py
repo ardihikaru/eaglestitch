@@ -3,7 +3,7 @@ import asyncio
 from .stitch import Stitch
 import logging
 from asab.log import LOG_NOTICE
-from eaglestitch.image_subscriber.zenoh_pubsub.zenoh_net_publisher import ZenohNetPublisher
+from eagle_zenoh.zenoh_lib.zenoh_net_publisher import ZenohNetPublisher
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import time

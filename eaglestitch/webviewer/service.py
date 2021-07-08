@@ -1,5 +1,5 @@
 import asab
-from extras.functions import is_img_exist
+from eagle_zenoh.extras.functions import is_img_exist
 import logging
 
 ###
