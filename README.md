@@ -48,6 +48,28 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
     - Server Eaglestitch: `$ export PYTHONPATH=:/home/eagles/devel/eaglestitch/pycore/:/home/eagles/devel/eagle-data-publisher/pycore`
 3. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
 4. Running zenoh publisher ([follow the tutorial](https://github.com/ardihikaru/eagle-data-publisher/blob/main/README.md)).
+5. Live update config:
+   ``` 
+   curl --location --request PUT 'http://localhost:8888/stitching/config' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "processor_status": true,
+        "stitching_mode": 2,
+        
+        "target_stitch": 6,
+    
+        "frame_skip": 1,
+        "max_frames": 4
+    }' 
+   ```
+    - **IMPORTANT**: Please ignore value of `stitching_mode` (keep it as `2`) and `target_stitch`
+    - `frame_skip`: Set how many frames to skip. default=1.
+        - When `frame_skip=1`, no frame will be skipped (30 FPS)
+        - When `frame_skip=3`, it will skip every 3 frames. So it will collect frame `1, 4, 8, ..., dst` (10 FPS)
+    - `max_frames`: Set total number of frames to be collected before applying the stitching method.
+        - **FYI**: So far, we tested it up to `max_frames=10`
+6. Get stitching results: `curl --location --request GET 'http://localhost:8888/stitching?to_url=true'`
+
 
 # Common information
 - RestAPI URL: `$ http://<domain>:8888`
