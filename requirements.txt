@@ -1,4 +1,4 @@
-asab
+asab==20.7.28
 motor
 numpy
 simplejson
