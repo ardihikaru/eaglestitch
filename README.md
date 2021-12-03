@@ -11,7 +11,7 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 7. [Fish Shell](https://github.com/fish-shell/fish-shell) 
     and [Oh-My-Fish](https://github.com/oh-my-fish/oh-my-fish) (**OPTIONAL, but recommended**)
 
-# Installation (`Fish Shell` + `Virtual ENV`)
+# Installation
 1. Install [Rust toolchain](https://rustup.rs/) (for Zenoh usage)
     - Install rustop: `$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
     - Install `Rustup` plugin:
@@ -34,39 +34,42 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
     - Load cargo: `$ source $HOME/.cargo/env`
     - Instal toolchain: `$ rustup toolchain install nightly`
 2. Update **Host Machine**'s python3 pip version: `$ pip3 install --upgrade pip`
-3. Install following package in **Host Maching**:
-    - Maturin: `$ pip3 install maturin`
-    - Eclipse-Zenoh: `$ pip3 install eclipse-zenoh`
+3. Install `Cython`: `$ pip3 install Cython`
 4. Go to main project directory
-5. Install python virtual environment: `$ python3 -m venv venv`
-6. Activate python virtual environment: `$ . venv/bin/activate.fish`
-7. Install requirements: `$ pip install -r requirements.txt`
-    - **IMPORTANT NOTE**: Package `eclipse-zenoh` is already installed in `step-3`
-8. Install openCV: `$ pip install opencv-python`
-9. Install Zenoh API connector (with Rust-based Zenoh):
-    - Go to `venv` directory: `$ cd venv`
-    - Clone zenoh: `$ git clone https://github.com/eclipse-zenoh/zenoh-python.git`
-    - Go to cloned Zenoh directory: `$ cd zenoh-python`
-    - Build the package: `$ maturin develop —release`
-        - **IF ERROR happened**, use this command instead:
-            `$ pip install . --use-feature=in-tree-build`
-
+5. Install requirements: `$ pip3 install -r requirements.txt`
+6. Install openCV (optional): `$ pip3 install opencv-python`
+    - **IMPORTANT**: It is highly recommended to install it manually for CUDA supported version.
 
 # How to use
-1. Go to root project directory: `$ cd /../eaglestitch/`
-2. Activate python virtual environment: `$ . venv/bin/activate.fish`
-    - If you are not using a virtual environment, run following command:
-        - Format: `$ export PYTHONPATH=:<ROOT_PROJECT>/eaglestitch/pycore/`
-        - Server: `$ export PYTHONPATH=:/home/popeye/devel/eaglestitch/pycore/`
-        - Server: `$ export PYTHONPATH=:/home/eagles/devel/eaglestitch/pycore/`
+1. Download [data publisher](https://github.com/ardihikaru/eagle-data-publisher) project
+    - Place the project under the same ROOT directory with your `EagleStitch` project
+        - e.g. `/home/eagles/devel/<HERE>`
+2. Export related libs: 
+    - Server Eaglestitch: `$ export PYTHONPATH=:/home/eagles/devel/eaglestitch/pycore/:/home/eagles/devel/eagle-data-publisher/pycore`
 3. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
-4. Running Zenoh publisher: `$ python3 tests/net_publisher_img_camera.py -e tcp/localhost:7446 --cvout -v /home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4`
-    - Sample send to EagleStitch Server: `$ python3 tests/net_publisher_img_camera.py -e tcp/192.168.1.11:7446`
-    - You can change `localhost` to a specific IP, and
-    - You can change `/home/ardi/devel/nctu/IBM-Lab/eaglestitch/data/videos/samer/0312_1_LtoR_1.mp4` into:
-        - Another video file (with **full path**), or
-        - Change it into `0` to read camera
-        - e.g.: `/home/eagles/devel/eaglestitch/data/videos/0312_1_LtoR_1.mp4`
+4. Running zenoh publisher ([follow the tutorial](https://github.com/ardihikaru/eagle-data-publisher/blob/main/README.md)).
+5. Live update config:
+   ``` 
+   curl --location --request PUT 'http://localhost:8888/stitching/config' \
+    --header 'Content-Type: application/json' \
+    --data-raw '{
+        "processor_status": true,
+        "stitching_mode": 2,
+        
+        "target_stitch": 6,
+    
+        "frame_skip": 1,
+        "max_frames": 4
+    }' 
+   ```
+    - **IMPORTANT**: Please ignore value of `stitching_mode` (keep it as `2`) and `target_stitch`
+    - `frame_skip`: Set how many frames to skip. default=1.
+        - When `frame_skip=1`, no frame will be skipped (30 FPS)
+        - When `frame_skip=3`, it will skip every 3 frames. So it will collect frame `1, 4, 8, ..., dst` (10 FPS)
+    - `max_frames`: Set total number of frames to be collected before applying the stitching method.
+        - **FYI**: So far, we tested it up to `max_frames=10`
+6. Get stitching results: `curl --location --request GET 'http://localhost:8888/stitching?to_url=true'`
+
 
 # Common information
 - RestAPI URL: `$ http://<domain>:8888`
@@ -81,7 +84,6 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 - Homepage: `http://localhost:8888`
 - Show stitching result: `http://localhost:8888/webview/{stitching_id}`
 
-Reference:
+References:
  - Stitching pipeline: https://github.com/tranleanh/image-panorama-stitching/blob/master/multi_image_pano.py
  - Black region cropping for panorama image: https://www.pyimagesearch.com/2018/12/17/image-stitching-with-opencv-and-python/
-
