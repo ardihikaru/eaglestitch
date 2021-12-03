@@ -42,6 +42,7 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 
 # How to use
 1. Download [data publisher](https://github.com/ardihikaru/eagle-data-publisher) project
+    - Use tag `v0.0.1-pre-alpha1`
     - Place the project under the same ROOT directory with your `EagleStitch` project
         - e.g. `/home/s010132/devel/<HERE>`
 2. Export related libs: 
