@@ -126,6 +126,18 @@ class StitchingControllerSectionWebHandler(object):
 			L.error("Unable to extract json request")
 			raise aiohttp.web.HTTPBadRequest(reason="Unable to extract json request")
 
+		# set defaulf mode=2
+		# enrich with default value for some parameters
+		if "stitching_mode" not in request_json:
+			request_json.update({
+				"stitching_mode": 2,
+			})
+
+		if "target_stitch" not in request_json:
+			request_json.update({
+				"target_stitch": 6,
+			})
+
 		# Validate request json
 		_err_msg = await self._validate_request_json(request_json)
 		if _err_msg is not None:

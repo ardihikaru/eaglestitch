@@ -42,27 +42,25 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 
 # How to use
 1. Download [data publisher](https://github.com/ardihikaru/eagle-data-publisher) project
+    - Use tag `v0.0.1-pre-alpha1`
     - Place the project under the same ROOT directory with your `EagleStitch` project
         - e.g. `/home/s010132/devel/<HERE>`
 2. Export related libs: 
-    - Server Eaglestitch: `$ export PYTHONPATH=:/home/s010132/devel/eaglestitch/pycore/:/home/s010132/devel/eagle-data-publisher/pycore`
-3. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
-4. Running zenoh publisher ([follow the tutorial](https://github.com/ardihikaru/eagle-data-publisher/blob/main/README.md)).
-5. Live update config:
+    - Server Eaglestitch: `$ export PYTHONPATH=:/home/s010132/devel/eaglestitch/pycore/:/home/s010132/devel/eagle-data-publisher/pycore`, or
+    - Server Eaglestitch: `$ export PYTHONPATH=:/home/eagles/devel/eaglestitch/pycore/:/home/eagles/devel/eagle-data-publisher/pycore`
+3. Run mongoDB: `$ docker run -d --name mongo-service --network host mongo`
+4. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
+5. Running zenoh publisher ([follow the tutorial](https://github.com/ardihikaru/eagle-data-publisher/blob/main/README.md)).
+6. Live update config:
    ``` 
    curl --location --request PUT 'http://localhost:8888/stitching/config' \
     --header 'Content-Type: application/json' \
     --data-raw '{
         "processor_status": true,
-        "stitching_mode": 2,
-        
-        "target_stitch": 6,
-    
         "frame_skip": 1,
         "max_frames": 4
     }' 
    ```
-    - **IMPORTANT**: Please ignore value of `stitching_mode` (keep it as `2`) and `target_stitch`
     - `frame_skip`: Set how many frames to skip. default=1.
         - When `frame_skip=1`, no frame will be skipped (30 FPS)
         - When `frame_skip=3`, it will skip every 3 frames. So it will collect frame `1, 4, 8, ..., dst` (10 FPS)
