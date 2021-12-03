@@ -155,6 +155,7 @@ class ImageSubscriberService(asab.Service):
 
 		return True
 
+	# DEPRECATED!
 	def __exec_stitching_in_batch_mode(self, img_info):
 		# append current captured img data
 		self.batch_imgs.append(img_info["img"])
@@ -277,6 +278,9 @@ class ImageSubscriberService(asab.Service):
 		# print(" #### LISTENER ..")
 
 		img_info, latency_data = extract_compressed_tagged_img(consumed_data)
+
+		# decompress `raw_img`
+		img_info["img"] = cv2.imdecode(img_info["raw_img"], 1)  # decompress
 
 		return img_info
 

@@ -27,3 +27,6 @@ to_url=true
 [zenoh:config]
 # Change `localhost` with your IP or vhost
 comm_ip=localhost
+
+# config for subscriber
+selector=/eagle/svc/**
