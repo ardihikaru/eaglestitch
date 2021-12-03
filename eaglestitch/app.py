@@ -12,6 +12,7 @@ from .stitching_api import StitchingAPIModule
 from .webviewer import WebviewerModule
 from .stitching import StitchingModule
 from .image_subscriber import ImageSubscriberModule
+from extras.missing_asab_components.application import Application
 
 ###
 
@@ -20,7 +21,7 @@ L = logging.getLogger(__name__)
 ###
 
 
-class EagleStitchApplication(asab.Application):
+class EagleStitchApplication(Application):
 
 	def __init__(self):
 		super().__init__()
