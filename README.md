@@ -43,9 +43,9 @@ Eagle Stitch is a dockerized system aims to stitch multiple images
 # How to use
 1. Download [data publisher](https://github.com/ardihikaru/eagle-data-publisher) project
     - Place the project under the same ROOT directory with your `EagleStitch` project
-        - e.g. `/home/eagles/devel/<HERE>`
+        - e.g. `/home/s010132/devel/<HERE>`
 2. Export related libs: 
-    - Server Eaglestitch: `$ export PYTHONPATH=:/home/eagles/devel/eaglestitch/pycore/:/home/eagles/devel/eagle-data-publisher/pycore`
+    - Server Eaglestitch: `$ export PYTHONPATH=:/home/s010132/devel/eaglestitch/pycore/:/home/s010132/devel/eagle-data-publisher/pycore`
 3. Run the script: `$ python eaglestitch.py -c etc/eaglestitch.conf`
 4. Running zenoh publisher ([follow the tutorial](https://github.com/ardihikaru/eagle-data-publisher/blob/main/README.md)).
 5. Live update config:
